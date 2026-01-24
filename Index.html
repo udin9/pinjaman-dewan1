@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="ms" class="h-full">
+
+<head>
+    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengurusan Peminjaman Peralatan ICT</title>
+    <script src="/_sdk/data_sdk.js"></script>
+    <script src="/_sdk/element_sdk.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+
+</head>
+
+<body class="h-full">
+    <div id="app" class="h-full w-full bg-slate-50 overflow-auto"><!-- Toast Notification -->
+        <div id="toast"
+            class="fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg hidden z-50 toast"></div>
+        <!-- Mobile Header -->
+        <header
+            class="md:hidden bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 flex items-center justify-between sticky top-0 z-40">
+            <button id="menuToggle" class="p-2 hover:bg-blue-700 rounded-lg transition-colors" aria-label="Toggle Menu">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
+                    </path>
+                </svg></button>
+            <h1 id="mobileAppTitle" class="text-lg font-bold">Pengurusan Peminjaman ICT</h1>
+            <div class="w-10"></div>
+        </header>
+        <div class="flex h-full"><!-- Sidebar -->
+            <aside id="sidebar"
+                class="sidebar sidebar-closed md:sidebar-open fixed md:relative z-30 w-64 bg-gradient-to-b from-slate-800 to-slate-900 text-white h-full shadow-xl">
+                <div class="p-6 border-b border-slate-700">
+                    <h1 id="sidebarAppTitle" class="text-2xl font-bold text-blue-400">ICT Manager</h1>
+                    <p class="text-slate-400 text-sm mt-1">Sistem Peminjaman</p>
+                </div>
+                <nav class="p-4 space-y-2"><button data-page="dashboard"
+                        class="nav-btn w-full text-left px-4 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors flex items-center space-x-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
+                            </path>
+                        </svg><span class="font-medium">Dashboard</span> </button> <button data-page="permohonan"
+                        class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-700 transition-colors flex items-center space-x-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                            </path>
+                        </svg><span class="font-medium">Senarai Permohonan</span> </button> <button
+                        data-page="peralatan"
+                        class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-700 transition-colors flex items-center space-x-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z">
+                            </path>
+                        </svg><span class="font-medium">Senarai Peralatan ICT</span> </button> <button
+                        data-page="laporan"
+                        class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-700 transition-colors flex items-center space-x-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                            </path>
+                        </svg><span class="font-medium">Laporan</span> </button>
+                </nav>
+            </aside><!-- Overlay for mobile -->
+            <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden md:hidden"></div>
+            <!-- Main Content -->
+            <main class="flex-1 overflow-auto"><!-- Dashboard Page -->
+                <div id="dashboardPage" class="page-content p-6">
+                    <h2 id="dashboardPageTitle" class="text-3xl font-bold text-slate-800 mb-6">Dashboard</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="stat-card bg-white p-6 rounded-xl shadow-md border-l-4 border-green-500">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-slate-600 text-sm font-medium">Available Item</p>
+                                    <p id="statAvailable" class="text-3xl font-bold text-slate-800 mt-2">0</p>
+                                </div>
+                                <div class="bg-green-100 p-3 rounded-lg">
+                                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor"
+                                        viewbox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-card bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-slate-600 text-sm font-medium">Sedang Digunakan</p>
+                                    <p id="statInUse" class="text-3xl font-bold text-slate-800 mt-2">0</p>
+                                </div>
+                                <div class="bg-blue-100 p-3 rounded-lg">
+                                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor"
+                                        viewbox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-card bg-white p-6 rounded-xl shadow-md border-l-4 border-red-500">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-slate-600 text-sm font-medium">Lewat Dipulangkan</p>
+                                    <p id="statOverdue" class="text-3xl font-bold text-slate-800 mt-2">0</p>
+                                </div>
+                                <div class="bg-red-100 p-3 rounded-lg">
+                                    <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor"
+                                        viewbox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-card bg-white p-6 rounded-xl shadow-md border-l-4 border-purple-500">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-slate-600 text-sm font-medium">Telah Dipulangkan</p>
+                                    <p id="statReturned" class="text-3xl font-bold text-slate-800 mt-2">0</p>
+                                </div>
+                                <div class="bg-purple-100 p-3 rounded-lg">
+                                    <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor"
+                                        viewbox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="stat-card bg-white p-6 rounded-xl shadow-md">
+                            <h3 class="text-lg font-semibold text-slate-700 mb-2">Permohonan Baru</h3>
+                            <p id="statNew" class="text-4xl font-bold text-blue-600">0</p>
+                        </div>
+                        <div class="stat-card bg-white p-6 rounded-xl shadow-md">
+                            <h3 class="text-lg font-semibold text-slate-700 mb-2">Permohonan Diterima</h3>
+                            <p id="statAccepted" class="text-4xl font-bold text-green-600">0</p>
+                        </div>
+                        <div class="stat-card bg-white p-6 rounded-xl shadow-md">
+                            <h3 class="text-lg font-semibold text-slate-700 mb-2">Permohonan Ditolak</h3>
+                            <p id="statRejected" class="text-4xl font-bold text-red-600">0</p>
+                        </div>
+                    </div>
+                </div><!-- Senarai Permohonan Page -->
+                <div id="permohonanPage" class="page-content hidden p-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                        <h2 class="text-3xl font-bold text-slate-800">Senarai Permohonan</h2>
+                        <div class="flex flex-wrap gap-3"><button id="btnNewPermohonan"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-md flex items-center space-x-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 4v16m8-8H4"></path>
+                                </svg><span>Tambah Permohonan</span> </button> <button id="btnUserFormLink"
+                                class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-md flex items-center space-x-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z">
+                                    </path>
+                                </svg><span>Borang User</span> </button>
+                        </div>
+                    </div><!-- Form Permohonan Baru -->
+                    <div id="formPermohonan" class="bg-white p-6 rounded-xl shadow-md mb-6 hidden">
+                        <h3 class="text-xl font-semibold text-slate-800 mb-4">Borang Permohonan Baru</h3>
+                        <form id="permohonanForm" class="space-y-4">
+                            <div><label for="namaPengguna" class="block text-sm font-medium text-slate-700 mb-2">Nama
+                                    Pengguna</label> <input type="text" id="namaPengguna" required
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div><label for="emailPengguna" class="block text-sm font-medium text-slate-700 mb-2">Email
+                                    Pengguna</label> <input type="email" id="emailPengguna" required
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div><label for="nomorTelefon" class="block text-sm font-medium text-slate-700 mb-2">Nombor
+                                    Telefon</label> <input type="tel" id="nomorTelefon" required
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div><label for="kuantitiDipinjam"
+                                    class="block text-sm font-medium text-slate-700 mb-2">Kuantiti Dipinjam</label>
+                                <input type="number" id="kuantitiDipinjam" required min="1"
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-2">Senarai Item Mahu
+                                    Dipinjam</label>
+                                <div id="itemCheckboxContainer"
+                                    class="space-y-2 max-h-48 overflow-y-auto border border-slate-300 rounded-lg p-4 bg-slate-50">
+                                    <p class="text-slate-500 text-sm">Tiada peralatan tersedia.</p>
+                                </div><input type="hidden" id="itemDipinjam" required>
+                            </div>
+                            <div class="flex space-x-3"><button type="submit" id="submitPermohonan"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2">
+                                    <span id="submitPermohonanText">Hantar Permohonan</span> </button> <button
+                                    type="button" id="cancelPermohonan"
+                                    class="bg-slate-500 hover:bg-slate-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">Batal</button>
+                            </div>
+                        </form>
+                    </div><!-- User Form Preview Modal -->
+                    <div id="userFormModal"
+                        class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+                        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                            <div
+                                class="sticky top-0 bg-white border-b border-slate-200 p-6 flex justify-between items-center">
+                                <h3 class="text-2xl font-bold text-slate-800">Preview Borang User</h3><button
+                                    id="btnCloseUserFormModal"
+                                    class="text-slate-400 hover:text-slate-600 transition-colors">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg></button>
+                            </div>
+                            <div class="p-8">
+                                <div
+                                    class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg mb-4 border border-green-200">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-3">
+                                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor"
+                                                viewbox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1">
+                                                </path>
+                                            </svg>
+                                            <div>
+                                                <p class="text-sm font-semibold text-green-800">Link Borang Aktif</p>
+                                                <p class="text-xs text-green-700">Kongsi link ini dengan pengguna</p>
+                                            </div>
+                                        </div><button id="btnCopyUserFormLink"
+                                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                                                </path>
+                                            </svg><span>Salin Link</span> </button>
+                                    </div>
+                                    <div class="mt-3"><input type="text" id="userFormLink" readonly
+                                            value="https://canva.com/forms/peminjaman-ict-user"
+                                            class="w-full bg-white px-3 py-2 text-sm text-slate-700 rounded border border-green-300 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                    </div>
+                                </div>
+                                <div
+                                    class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg mb-6 border border-blue-200">
+                                    <h4 class="text-xl font-bold text-slate-800 mb-2">Borang Permohonan Peminjaman
+                                        Peralatan ICT</h4>
+                                    <p class="text-sm text-slate-600">Sila isi maklumat di bawah untuk memohon
+                                        peminjaman peralatan</p>
+                                </div>
+                                <form id="previewUserForm" class="space-y-5">
+                                    <div><label class="block text-sm font-medium text-slate-700 mb-2">Nama Penuh</label>
+                                        <input type="text" disabled placeholder="Nama anda"
+                                            class="w-full px-4 py-3 border border-slate-300 rounded-lg bg-slate-50 text-slate-500">
+                                    </div>
+                                    <div><label class="block text-sm font-medium text-slate-700 mb-2">Alamat
+                                            Email</label> <input type="email" disabled placeholder="email@contoh.com"
+                                            class="w-full px-4 py-3 border border-slate-300 rounded-lg bg-slate-50 text-slate-500">
+                                    </div>
+                                    <div><label class="block text-sm font-medium text-slate-700 mb-2">Nombor
+                                            Telefon</label> <input type="tel" disabled placeholder="012-3456789"
+                                            class="w-full px-4 py-3 border border-slate-300 rounded-lg bg-slate-50 text-slate-500">
+                                    </div>
+                                    <div><label class="block text-sm font-medium text-slate-700 mb-2">Kuantiti Item
+                                            Dipinjam</label> <input type="number" disabled placeholder="1"
+                                            class="w-full px-4 py-3 border border-slate-300 rounded-lg bg-slate-50 text-slate-500">
+                                    </div><button type="button" disabled
+                                        class="w-full bg-blue-400 text-white px-6 py-3 rounded-lg font-medium cursor-not-allowed">
+                                        Hantar Permohonan (Preview Sahaja) </button>
+                                </form>
+                                <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                    <div class="flex">
+                                        <svg class="w-5 h-5 text-yellow-600 mr-3 flex-shrink-0 mt-0.5" fill="none"
+                                            stroke="currentColor" viewbox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                                            </path>
+                                        </svg>
+                                        <div>
+                                            <p class="text-sm font-semibold text-yellow-800 mb-1">Ini adalah preview
+                                                sahaja</p>
+                                            <p class="text-sm text-yellow-700">Borang sebenar akan diisi oleh pengguna
+                                                melalui link yang dikongsi. Preview ini menunjukkan bagaimana borang
+                                                akan kelihatan kepada pengguna.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- Form Edit Permohonan -->
+                    <div id="formEditPermohonan" class="bg-white p-6 rounded-xl shadow-md mb-6 hidden">
+                        <h3 class="text-xl font-semibold text-slate-800 mb-4">Edit Permohonan</h3>
+                        <form id="editPermohonanForm" class="space-y-4"><input type="hidden" id="editPermohonanId">
+                            <div><label for="editNamaPengguna"
+                                    class="block text-sm font-medium text-slate-700 mb-2">Nama Pengguna</label> <input
+                                    type="text" id="editNamaPengguna" required
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div><label for="editEmailPengguna"
+                                    class="block text-sm font-medium text-slate-700 mb-2">Email Pengguna</label> <input
+                                    type="email" id="editEmailPengguna" required
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div><label for="editNomorTelefon"
+                                    class="block text-sm font-medium text-slate-700 mb-2">Nombor Telefon</label> <input
+                                    type="tel" id="editNomorTelefon" required
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div><label for="editKuantitiDipinjam"
+                                    class="block text-sm font-medium text-slate-700 mb-2">Kuantiti Dipinjam</label>
+                                <input type="number" id="editKuantitiDipinjam" required min="1"
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-2">Senarai Item Mahu
+                                    Dipinjam</label>
+                                <div id="editItemCheckboxContainer"
+                                    class="space-y-2 max-h-48 overflow-y-auto border border-slate-300 rounded-lg p-4 bg-slate-50">
+                                    <p class="text-slate-500 text-sm">Tiada peralatan tersedia.</p>
+                                </div><input type="hidden" id="editItemDipinjam" required>
+                            </div>
+                            <div class="flex space-x-3"><button type="submit" id="submitEditPermohonan"
+                                    class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2">
+                                    <span>Simpan Perubahan</span> </button> <button type="button"
+                                    id="cancelEditPermohonan"
+                                    class="bg-slate-500 hover:bg-slate-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">Batal</button>
+                            </div>
+                        </form>
+                    </div><!-- Table Permohonan -->
+                    <div id="permohonanTable" class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-slate-100 border-b-2 border-slate-200">
+                                    <tr>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">Nama
+                                            Pemohon</th>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">Email UMS
+                                        </th>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">No. Pekerja
+                                        </th>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">No. Telefon
+                                        </th>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">Item</th>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">Kuantiti
+                                        </th>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">Status</th>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">Tarikh
+                                            Peminjaman</th>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">Tarikh
+                                            Dikembalikan</th>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">Tindakan
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="permohonanTableBody" class="divide-y divide-slate-200">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div><!-- Senarai Peralatan Page -->
+                <div id="peralatanPage" class="page-content hidden p-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                        <h2 class="text-3xl font-bold text-slate-800">Senarai Peralatan ICT</h2>
+                        <div class="flex space-x-3"><button id="btnManageKategori"
+                                class="bg-slate-600 hover:bg-slate-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-md flex items-center space-x-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4">
+                                    </path>
+                                </svg><span>Urus Kategori</span> </button> <button id="btnNewPeralatan"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-md flex items-center space-x-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 4v16m8-8H4"></path>
+                                </svg><span>Tambah Peralatan</span> </button>
+                        </div>
+                    </div><!-- Form Kategori -->
+                    <div id="formKategori" class="bg-white p-6 rounded-xl shadow-md mb-6 hidden">
+                        <h3 class="text-xl font-semibold text-slate-800 mb-4">Urus Kategori Peralatan</h3>
+                        <div class="space-y-4">
+                            <form id="kategoriForm" class="flex space-x-3"><input type="text" id="namaKategori"
+                                    placeholder="Nama Kategori Baru" required
+                                    class="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <button type="submit"
+                                    class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">Tambah</button>
+                            </form>
+                            <div id="kategoriList" class="space-y-2 max-h-64 overflow-y-auto">
+                                <p class="text-slate-500 text-sm">Tiada kategori. Tambah kategori baharu.</p>
+                            </div><button id="closeKategori"
+                                class="bg-slate-500 hover:bg-slate-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">Tutup</button>
+                        </div>
+                    </div><!-- Form Peralatan -->
+                    <div id="formPeralatan" class="bg-white p-6 rounded-xl shadow-md mb-6 hidden">
+                        <h3 class="text-xl font-semibold text-slate-800 mb-4">Borang Peralatan ICT</h3>
+                        <form id="peralatanForm" class="space-y-4">
+                            <div><label for="kategoriPeralatan"
+                                    class="block text-sm font-medium text-slate-700 mb-2">Kategori</label> <select
+                                    id="kategoriPeralatan" required
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                                    <option value="">Pilih Kategori</option>
+                                </select>
+                            </div>
+                            <div><label for="namaPeralatan" class="block text-sm font-medium text-slate-700 mb-2">Nama
+                                    Peralatan</label> <input type="text" id="namaPeralatan" required
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div><label for="nomorPendaftaranUMS"
+                                    class="block text-sm font-medium text-slate-700 mb-2">Nombor Pendaftaran UMS</label>
+                                <input type="text" id="nomorPendaftaranUMS" required
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="Contoh: UMS/2024/001">
+                            </div>
+                            <div><label for="nomorSiri" class="block text-sm font-medium text-slate-700 mb-2">Nombor
+                                    Siri</label> <input type="text" id="nomorSiri" required
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="Contoh: SN123456789">
+                            </div>
+                            <div class="flex space-x-3"><button type="submit" id="submitPeralatan"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2">
+                                    <span>Simpan</span> </button> <button type="button" id="cancelPeralatan"
+                                    class="bg-slate-500 hover:bg-slate-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">Batal</button>
+                            </div>
+                        </form>
+                    </div><!-- Table Peralatan -->
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-slate-100 border-b-2 border-slate-200">
+                                    <tr>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">Kategori
+                                        </th>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">Nama
+                                            Peralatan</th>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">No.
+                                            Pendaftaran UMS</th>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">No. Siri
+                                        </th>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">Jumlah
+                                            Penggunaan</th>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">Tindakan
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="peralatanTableBody" class="divide-y divide-slate-200">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div><!-- Laporan Page -->
+                <div id="laporanPage" class="page-content hidden p-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                        <h2 class="text-3xl font-bold text-slate-800">Laporan Penggunaan Peralatan</h2>
+                        <div class="flex flex-wrap gap-3"><button id="btnPrintLaporan"
+                                class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-md flex items-center space-x-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+                                    </path>
+                                </svg><span>Cetak</span> </button> <button id="btnDownloadLaporan"
+                                class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-md flex items-center space-x-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                    </path>
+                                </svg><span>Muat Turun CSV</span> </button>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md mb-6">
+                        <h3 class="text-lg font-semibold text-slate-800 mb-4">Filter Tempoh Laporan</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label for="tarikhMula" class="block text-sm font-medium text-slate-700 mb-2">Tarikh
+                                    Mula</label> <input type="date" id="tarikhMula"
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div><label for="tarikhAkhir" class="block text-sm font-medium text-slate-700 mb-2">Tarikh
+                                    Akhir</label> <input type="date" id="tarikhAkhir"
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+                        <div class="flex space-x-3 mt-4"><button id="btnFilterLaporan"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">Tapis
+                                Laporan</button> <button id="btnResetFilter"
+                                class="bg-slate-500 hover:bg-slate-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">Reset</button>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="p-4 bg-slate-50 border-b border-slate-200">
+                            <p id="laporanPeriodText" class="text-sm font-medium text-slate-700">Menunjukkan semua data
+                            </p>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full" id="laporanTable">
+                                <thead class="bg-slate-100 border-b-2 border-slate-200">
+                                    <tr>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">Nama
+                                            Peralatan</th>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">Kategori
+                                        </th>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">Jumlah
+                                            Penggunaan</th>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-700">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="laporanTableBody" class="divide-y divide-slate-200">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
