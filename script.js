@@ -1,4 +1,4 @@
-﻿document.getElementById('form-user-permohonan').addEventListener('submit', async (e) => {
+document.getElementById('form-user-permohonan').addEventListener('submit', async (e) => {
     e.preventDefault();
     console.log('ðŸš€ User form submitted');
 
@@ -1642,4 +1642,3 @@ function downloadPDF() {
 function printReport() {
     window.print();
 }
-

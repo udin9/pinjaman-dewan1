@@ -146,3 +146,153 @@ body {
         border: none !important;
     }
 }
+=======
+body {
+    box-sizing: border-box;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.sidebar-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-item.active {
+    background: rgba(255, 255, 255, 0.15);
+    border-left: 3px solid #fbbf24;
+}
+
+.card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.modal-overlay {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slide {
+    animation: slideIn 0.3s ease-out;
+}
+
+.toast {
+    animation: slideIn 0.3s ease-out;
+}
+
+@view-transition {
+    navigation: auto;
+}
+
+/* Print Styling for PDF Download */
+@media print {
+
+    /* Hide non-essential elements */
+    #sidebar,
+    #download-menu,
+    button,
+    .bg-gradient-to-br,
+    /* Login page background/header potentially */
+    #login-page,
+    #toast,
+    .noprint {
+        display: none !important;
+    }
+
+    /* Force background colors to print */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* Layout adjustments */
+    #app {
+        display: block !important;
+        height: auto !important;
+        width: 100% !important;
+    }
+
+    main {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        overflow: visible !important;
+    }
+
+    .page {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Ensure table content is fully visible */
+    .overflow-auto,
+    .overflow-x-auto {
+        overflow: visible !important;
+    }
+
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+    }
+
+    th,
+    td {
+        border: 1px solid #e2e8f0 !important;
+        padding: 8px !important;
+        font-size: 10pt !important;
+    }
+
+    /* Hide pages that are not active */
+    .page.hidden {
+        display: none !important;
+    }
+
+    /* Show active page */
+    .page:not(.hidden) {
+        display: block !important;
+    }
+
+    /* Custom print header */
+    .page:not(.hidden)::before {
+        content: "Laporan Sistem Pengurusan Dewan";
+        display: block;
+        font-size: 18pt;
+        font-weight: bold;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    /* Adjust specific elements */
+    .shadow-xl,
+    .shadow-2xl,
+    .shadow-lg,
+    .shadow-md,
+    .shadow-sm {
+        box-shadow: none !important;
+    }
+
+    .rounded-xl,
+    .rounded-2xl {
+        border-radius: 0 !important;
+        border: none !important;
+    }
+}
+>>>>>>> 4c444336f55c8623ef9d856cb6700cac5ecb2a8f
