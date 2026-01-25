@@ -1,1 +1,1 @@
-[text](https://udin9.github.io/pinjaman-dewan1/)
+[https://udin9.github.io/pinjaman-dewan1/] (https://udin9.github.io/pinjaman-dewan1/)
