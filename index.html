@@ -1,0 +1,1265 @@
+<!doctype html>
+<html lang="ms" class="h-full">
+
+<head>
+    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Pengurusan Dewan Sri Kinabatangan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/_sdk/element_sdk.js"></script>
+    <script src="/_sdk/data_sdk.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap"
+        rel="stylesheet">
+
+</head>
+
+<body class="h-full bg-slate-100"><!-- Login Page -->
+    <div id="login-page" class="h-full flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div class="bg-gradient-to-br from-indigo-600 to-purple-700 p-8 text-white">
+                <div class="flex items-center justify-center mb-6">
+                    <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                    </div>
+                </div>
+                <h1 class="text-2xl font-bold text-center mb-2">Portal Pengurusan</h1>
+                <p class="text-center text-indigo-100">Dewan Sri Kinabatangan</p>
+            </div>
+            <form id="form-login" class="p-8 space-y-6">
+                <div><label for="username" class="block text-sm font-medium text-slate-700 mb-2">Username</label> <input
+                        type="text" id="username" required
+                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Masukkan username">
+                </div>
+                <div><label for="password" class="block text-sm font-medium text-slate-700 mb-2">Password</label> <input
+                        type="password" id="password" required
+                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Masukkan password">
+                </div>
+                <div id="login-error" class="hidden text-red-600 text-sm text-center p-3 bg-red-50 rounded-lg">
+                    Username atau password tidak sah
+                </div><button type="button" id="btn-login" onclick="handleLogin()"
+                    class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 rounded-xl font-medium transition-all transform hover:scale-[1.02] shadow-lg">
+                    Log Masuk </button>
+            </form>
+        </div>
+    </div><!-- Main App -->
+    <div id="app" class="h-full flex hidden"><!-- Sidebar (Admin Only) -->
+        <aside id="sidebar"
+            class="w-64 bg-gradient-to-b from-indigo-900 to-indigo-800 text-white flex-shrink-0 flex flex-col">
+            <div class="p-6 border-b border-indigo-700">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-amber-400 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-indigo-900" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 id="portal-title" class="font-bold text-lg">PENGURUSAN DEWAN SRI KINABATANGAN</h1>
+                        <p id="org-name" class="text-xs text-indigo-300">Sistem Portal</p>
+                    </div>
+                </div>
+            </div>
+            <nav class="flex-1 p-4 space-y-1"><button onclick="showPage('dashboard')"
+                    class="sidebar-item active w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all"
+                    data-page="dashboard">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg><span>Dashboard</span> </button> <button onclick="showPage('permohonan')"
+                    class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all"
+                    data-page="permohonan">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg><span>Senarai Permohonan</span> </button> <button onclick="showPage('peralatan')"
+                    class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all"
+                    data-page="peralatan">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg><span>Senarai Peralatan</span> </button> <button onclick="showPage('laporan')"
+                    class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all"
+                    data-page="laporan">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg><span>Laporan Admin</span> </button>
+            </nav>
+            <div class="p-4 border-t border-indigo-700">
+                <div class="flex items-center justify-between px-4 py-2">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center text-indigo-900 font-bold text-sm">
+                            A
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium">Admin</p>
+                            <p class="text-xs text-indigo-300">Pentadbir Sistem</p>
+                        </div>
+                    </div><button onclick="logout()" class="text-indigo-300 hover:text-white transition-colors"
+                        title="Log Keluar">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg></button>
+                </div>
+            </div>
+        </aside><!-- Main Content -->
+        <main id="admin-content" class="flex-1 overflow-auto"><!-- Dashboard Page -->
+            <div id="page-dashboard" class="page p-8">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-slate-800">Dashboard</h2>
+                    <p class="text-slate-500">Ringkasan sistem pengurusan dewan</p>
+                </div><!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-2xl p-6 shadow-sm card-hover transition-all">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor"
+                                    viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold text-slate-800" id="stat-total">0</p>
+                        <p class="text-slate-500 text-sm">Jumlah Permohonan</p>
+                    </div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm card-hover transition-all">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+                                <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor"
+                                    viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold text-slate-800" id="stat-pending">0</p>
+                        <p class="text-slate-500 text-sm">Dalam Proses</p>
+                    </div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm card-hover transition-all">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor"
+                                    viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold text-slate-800" id="stat-approved">0</p>
+                        <p class="text-slate-500 text-sm">Diluluskan</p>
+                    </div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm card-hover transition-all">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor"
+                                    viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold text-slate-800" id="stat-peralatan">0</p>
+                        <p class="text-slate-500 text-sm">Jumlah Peralatan</p>
+                    </div>
+                </div><!-- Recent Applications -->
+                <div class="bg-white rounded-2xl shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-semibold text-slate-800">Permohonan Terkini</h3><button
+                            onclick="showPage('permohonan')"
+                            class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">Lihat Semua →</button>
+                    </div>
+                    <div id="recent-applications" class="space-y-4">
+                        <p class="text-slate-400 text-center py-8">Tiada permohonan terkini</p>
+                    </div>
+                </div>
+            </div><!-- Permohonan Page -->
+            <div id="page-permohonan" class="page hidden p-8">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Senarai Permohonan</h2>
+                        <p class="text-slate-500">Urus semua permohonan peminjaman</p>
+                    </div>
+                    <div class="flex items-center gap-3"><button onclick="showSharelinkInfo()"
+                            class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                            </svg> Sharelink Borang </button>
+                        <div class="relative"><button onclick="toggleDownloadMenu()"
+                                class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg> Muat Turun </button>
+                            <div id="download-menu"
+                                class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
+                                <button onclick="downloadExcel()"
+                                    class="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 transition-colors">
+                                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor"
+                                        viewbox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg><span class="text-slate-700 font-medium">Excel (.xlsx)</span> </button>
+                                <button onclick="downloadPDF()"
+                                    class="w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center gap-3 transition-colors">
+                                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor"
+                                        viewbox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    </svg><span class="text-slate-700 font-medium">PDF (.pdf)</span> </button>
+                            </div>
+                        </div><button onclick="openModal('modal-permohonan')"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4" />
+                            </svg> Tambah Permohonan </button>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden mb-8">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-slate-50">
+                                <tr>
+                                    <th
+                                        class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                        Pemohon</th>
+                                    <th
+                                        class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                        Email</th>
+                                    <th
+                                        class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                        No. Telefon</th>
+                                    <th
+                                        class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                        Cawangan</th>
+                                    <th
+                                        class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                        Item</th>
+                                    <th
+                                        class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                        Tarikh Pinjam</th>
+                                    <th
+                                        class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                        Tarikh Pulang</th>
+                                    <th
+                                        class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                        Status</th>
+                                    <th
+                                        class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                        Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="permohonan-table" class="divide-y divide-slate-100">
+                                <tr>
+                                    <td colspan="9" class="px-6 py-12 text-center text-slate-400">Tiada permohonan</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div><!-- Peralatan Page -->
+            <div id="page-peralatan" class="page hidden p-8">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-slate-800">Senarai Peralatan</h2>
+                    <p class="text-slate-500">Urus kategori dan peralatan</p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8"><!-- Kategori Section -->
+                    <div class="bg-white rounded-2xl shadow-sm p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold text-slate-800">Urus Kategori</h3><button
+                                onclick="openModal('modal-kategori')"
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 4v16m8-8H4" />
+                                </svg> Tambah Kategori </button>
+                        </div>
+                        <div id="kategori-list" class="space-y-3">
+                            <p class="text-slate-400 text-center py-8">Tiada kategori</p>
+                        </div>
+                    </div><!-- Peralatan Section -->
+                    <div class="bg-white rounded-2xl shadow-sm p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold text-slate-800">Tambah Peralatan</h3><button
+                                onclick="openModal('modal-peralatan')"
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 4v16m8-8H4" />
+                                </svg> Tambah Peralatan </button>
+                        </div>
+                        <div id="peralatan-list" class="space-y-3">
+                            <p class="text-slate-400 text-center py-8">Tiada peralatan</p>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- Laporan Page -->
+            <div id="page-laporan" class="page hidden p-8">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Laporan Admin</h2>
+                        <p class="text-slate-500">Statistik penggunaan dewan dan peralatan</p>
+                    </div><button onclick="printReport()"
+                        class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 transition-colors whitespace-nowrap">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg> Print / Download Laporan </button>
+                </div><!-- Filter Section -->
+                <div class="bg-white rounded-2xl shadow-sm p-6 mb-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                        <h3 class="text-lg font-semibold text-slate-800">Filter Tarikh</h3>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div><label for="filter-tarikh-mula"
+                                class="block text-sm font-medium text-slate-700 mb-2">Tarikh Mula</label> <input
+                                type="date" id="filter-tarikh-mula"
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                onchange="applyDateFilter()">
+                        </div>
+                        <div><label for="filter-tarikh-akhir"
+                                class="block text-sm font-medium text-slate-700 mb-2">Tarikh Akhir</label> <input
+                                type="date" id="filter-tarikh-akhir"
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                onchange="applyDateFilter()">
+                        </div>
+                        <div class="flex items-end"><button onclick="resetDateFilter()"
+                                class="w-full px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition-colors">
+                                Reset Filter </button>
+                        </div>
+                    </div>
+                </div><!-- Graf Peratusan Penggunaan -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6"><!-- Graf Penggunaan Peralatan -->
+                    <div class="bg-white rounded-2xl shadow-sm p-6">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor"
+                                    viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-semibold text-slate-800">Peratusan Penggunaan Peralatan</h3>
+                        </div>
+                        <div id="chart-peralatan" class="space-y-3">
+                            <p class="text-slate-400 text-center py-8">Tiada data</p>
+                        </div>
+                    </div><!-- Graf Status Permohonan -->
+                    <div class="bg-white rounded-2xl shadow-sm p-6">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor"
+                                    viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-semibold text-slate-800">Status Permohonan</h3>
+                        </div>
+                        <div id="chart-status" class="space-y-3">
+                            <p class="text-slate-400 text-center py-8">Tiada data</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-6"><!-- Laporan Peralatan -->
+                    <div class="bg-white rounded-2xl shadow-sm p-6" id="report-peralatan">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor"
+                                    viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-semibold text-slate-800">Statistik Penggunaan Peralatan</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th
+                                            class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                            Nama Peralatan</th>
+                                        <th
+                                            class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                            Kategori</th>
+                                        <th
+                                            class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                            Kali Dipinjam</th>
+                                        <th
+                                            class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                            Status Terakhir</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="laporan-peralatan-table" class="divide-y divide-slate-100">
+                                    <tr>
+                                        <td colspan="4" class="px-6 py-12 text-center text-slate-400">Tiada data laporan
+                                            peralatan</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div><!-- Laporan Dewan -->
+                    <div class="bg-white rounded-2xl shadow-sm p-6" id="report-dewan">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor"
+                                    viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-slate-800">Kekerapan Penggunaan Dewan</h3>
+                                <p class="text-sm text-slate-500">Jumlah kali dewan telah digunakan</p>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th
+                                            class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                            Item</th>
+                                        <th
+                                            class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                            Kategori</th>
+                                        <th
+                                            class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                            Kali Digunakan</th>
+                                        <th
+                                            class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                            Status Terakhir</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="laporan-dewan-table" class="divide-y divide-slate-100">
+                                    <tr>
+                                        <td colspan="4" class="px-6 py-12 text-center text-slate-400">Tiada data laporan
+                                            dewan</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div><!-- Modal Permohonan -->
+    <div id="modal-permohonan" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0" onclick="closeModal('modal-permohonan')"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90%] overflow-auto animate-slide">
+                <div class="p-6 border-b border-slate-100">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xl font-semibold text-slate-800">Tambah Permohonan Baru</h3><button
+                            onclick="closeModal('modal-permohonan')" class="text-slate-400 hover:text-slate-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg></button>
+                    </div>
+                </div>
+                <form id="form-permohonan" class="p-6 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label for="nama-pemohon" class="block text-sm font-medium text-slate-700 mb-2">Nama
+                                Pemohon</label> <input type="text" id="nama-pemohon" required
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="Masukkan nama">
+                        </div>
+                        <div><label for="nombor-telefon" class="block text-sm font-medium text-slate-700 mb-2">Nombor
+                                Telefon</label> <input type="tel" id="nombor-telefon" required
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="01X-XXXXXXX">
+                        </div>
+                    </div>
+                    <div><label for="email-pemohon" class="block text-sm font-medium text-slate-700 mb-2">Email</label>
+                        <input type="email" id="email-pemohon" required
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="contoh@email.com">
+                    </div>
+                    <div><label for="cawangan" class="block text-sm font-medium text-slate-700 mb-2">Cawangan</label>
+                        <input type="text" id="cawangan" required
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Masukkan cawangan">
+                    </div><!-- Jenis Permohonan -->
+                    <div><label class="block text-sm font-medium text-slate-700 mb-3">Jenis Permohonan</label>
+                        <div class="grid grid-cols-2 gap-3"><button type="button"
+                                onclick="selectJenisPermohonan('Dewan', this)"
+                                class="jenis-btn p-4 border-2 border-slate-200 rounded-xl hover:border-indigo-400 transition-all text-center group">
+                                <svg class="w-8 h-8 text-slate-400 group-hover:text-indigo-600 mx-auto mb-2" fill="none"
+                                    stroke="currentColor" viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg><span class="text-slate-700 font-medium">Dewan</span> </button> <button
+                                type="button" onclick="selectJenisPermohonan('Peralatan', this)"
+                                class="jenis-btn p-4 border-2 border-slate-200 rounded-xl hover:border-indigo-400 transition-all text-center group">
+                                <svg class="w-8 h-8 text-slate-400 group-hover:text-indigo-600 mx-auto mb-2" fill="none"
+                                    stroke="currentColor" viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                </svg><span class="text-slate-700 font-medium">Peralatan</span> </button>
+                        </div><input type="hidden" id="jenis-permohonan-hidden" name="jenis-permohonan" required>
+                    </div><!-- Hanya muncul jika pilih Peralatan -->
+                    <div id="field-senarai-item" class="hidden"><label
+                            class="block text-sm font-medium text-slate-700 mb-2">Senarai Item Dipinjam</label>
+                        <div id="item-dipinjam-container"
+                            class="border border-slate-200 rounded-xl p-4 max-h-[200px] overflow-y-auto space-y-2">
+                            <p class="text-slate-400 text-sm text-center py-4">Tiada peralatan tersedia</p>
+                        </div><input type="hidden" id="item-dipinjam-hidden"> <input type="hidden"
+                            id="items-data-hidden">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label for="tarikh-mula" class="block text-sm font-medium text-slate-700 mb-2">Tarikh &amp;
+                                Masa Mula Penggunaan</label> <input type="datetime-local" id="tarikh-mula" required
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                onchange="checkDateOverlap()">
+                        </div>
+                        <div><label for="tarikh-pulang" class="block text-sm font-medium text-slate-700 mb-2">Tarikh
+                                &amp; Masa Tamat Penggunaan</label> <input type="datetime-local" id="tarikh-pulang"
+                                required
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                onchange="checkDateOverlap()">
+                        </div>
+                    </div>
+                    <div id="date-overlap-error" class="hidden border-l-4 border-red-600 bg-red-50 p-4 rounded-lg">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                                viewbox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <div class="flex-1">
+                                <h4 class="text-sm font-semibold text-red-800 mb-1">Tarikh Tidak Tersedia</h4>
+                                <p id="date-overlap-message" class="text-sm text-red-700"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div><label for="tujuan" class="block text-sm font-medium text-slate-700 mb-2">Tujuan
+                            Peminjaman</label> <textarea id="tujuan" required rows="3"
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Nyatakan tujuan peminjaman"></textarea>
+                    </div><!-- Terma & Syarat -->
+                    <div class="border-t-2 border-slate-200 pt-6 space-y-4">
+                        <h4 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg> Terma &amp; Syarat
+                        </h4><!-- Terma Dewan (muncul jika pilih Dewan) -->
+                        <div id="admin-terma-dewan"
+                            class="hidden space-y-3 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 shadow-sm">
+                            <div class="flex items-center gap-3 pb-3 border-b border-blue-200">
+                                <div
+                                    class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center shadow-md">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor"
+                                        viewbox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                    </svg>
+                                </div>
+                                <h5 class="text-base font-bold text-blue-900">Untuk Penggunaan Dewan</h5>
+                            </div><label
+                                class="flex items-start gap-4 cursor-pointer group bg-white p-4 rounded-lg border-2 border-blue-100 hover:border-blue-300 hover:bg-blue-50 transition-all">
+                                <input type="checkbox" id="admin-terma-dewan-tick" onchange="checkAdminTerms()"
+                                    class="w-6 h-6 text-blue-600 border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 mt-0.5 flex-shrink-0 cursor-pointer">
+                                <span
+                                    class="text-sm text-slate-700 flex-1 leading-relaxed group-hover:text-slate-900 font-medium">Saya
+                                    bersetuju dan memastikan dewan berada didalam keadaan yang bersih selepas digunakan.
+                                    Jika terdapat sampah sarap atau bekas makanan/minuman yang ditinggalkan didalam
+                                    dewan, saya mengambil penuh tanggungjawab untuk membersihkannya.</span> </label>
+                        </div><!-- Terma Peralatan (muncul jika pilih Peralatan) -->
+                        <div id="admin-terma-peralatan"
+                            class="hidden space-y-3 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl p-6 shadow-sm">
+                            <div class="flex items-center gap-3 pb-3 border-b border-amber-200">
+                                <div
+                                    class="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center shadow-md">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor"
+                                        viewbox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                    </svg>
+                                </div>
+                                <h5 class="text-base font-bold text-amber-900">Untuk Penggunaan Peralatan</h5>
+                            </div><label
+                                class="flex items-start gap-4 cursor-pointer group bg-white p-4 rounded-lg border-2 border-amber-100 hover:border-amber-300 hover:bg-amber-50 transition-all">
+                                <input type="checkbox" id="admin-terma-peralatan-tick" onchange="checkAdminTerms()"
+                                    class="w-6 h-6 text-amber-600 border-slate-300 rounded-md focus:ring-2 focus:ring-amber-500 mt-0.5 flex-shrink-0 cursor-pointer">
+                                <span
+                                    class="text-sm text-slate-700 flex-1 leading-relaxed group-hover:text-slate-900 font-medium">Saya
+                                    bersetuju sebarang kerosakan atau kecacatan keatas peralatan yang dipinjam akan
+                                    dikenakan tindakan ganti rugi serta merta.</span> </label>
+                        </div><!-- Terma Umum (SENTIASA MUNCUL untuk Admin juga) -->
+                        <div
+                            class="bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-xl p-6 shadow-sm">
+                            <div class="flex items-center gap-3 pb-3 border-b border-purple-200">
+                                <div
+                                    class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center shadow-md">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor"
+                                        viewbox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <h5 class="text-base font-bold text-purple-900">Persetujuan Am</h5>
+                            </div><label
+                                class="flex items-start gap-4 cursor-pointer group bg-white p-4 rounded-lg border-2 border-purple-100 hover:border-purple-300 hover:bg-purple-50 transition-all">
+                                <input type="checkbox" id="admin-terma-syarat-tick" onchange="checkAdminTerms()"
+                                    class="w-6 h-6 text-purple-600 border-slate-300 rounded-md focus:ring-2 focus:ring-purple-500 mt-0.5 flex-shrink-0 cursor-pointer">
+                                <span
+                                    class="text-sm text-slate-700 flex-1 leading-relaxed group-hover:text-slate-900 font-medium">Saya
+                                    bersetuju diatas syarat-syarat yang telah ditetapkan oleh Cawangan Senggara
+                                    Bangunan.</span> </label>
+                        </div><!-- Warning jika belum tick semua -->
+                        <div id="admin-terma-warning"
+                            class="hidden bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-300 p-5 rounded-xl shadow-md">
+                            <div class="flex items-start gap-4">
+                                <div
+                                    class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor"
+                                        viewbox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <h5 class="text-base font-bold text-red-900 mb-2 flex items-center gap-2">⚠️
+                                        Perhatian - Terma Belum Lengkap</h5>
+                                    <p class="text-sm text-red-800 leading-relaxed">Anda mesti bersetuju dengan
+                                        <strong>SEMUA</strong> terma &amp; syarat yang berkaitan sebelum boleh
+                                        menghantar permohonan. Sila semak dan tandakan semua kotak persetujuan di atas.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-3 pt-4"><button type="button" onclick="closeModal('modal-permohonan')"
+                            class="flex-1 px-6 py-3 border border-slate-200 rounded-xl text-slate-600 font-medium hover:bg-slate-50 transition-colors">Batal</button>
+                        <button type="submit" id="btn-submit-permohonan"
+                            class="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors">Hantar
+                            Permohonan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div><!-- Modal User Form -->
+    <div id="modal-user-form" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0" onclick="closeUserForm()"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4 overflow-auto">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl my-8 animate-slide">
+                <!-- Header - Google Form Style -->
+                <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-8 rounded-t-xl">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div
+                                    class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor"
+                                        viewbox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h2 class="text-2xl font-bold text-white">Borang Permohonan Peminjaman</h2>
+                                    <p class="text-purple-100 text-sm mt-1">Dewan Sri Kinabatangan</p>
+                                </div>
+                            </div>
+                            <p class="text-white/90 text-sm leading-relaxed">Sila isi borang ini dengan lengkap untuk
+                                membuat permohonan peminjaman dewan atau peralatan. Semua medan bertanda * adalah wajib
+                                diisi.</p>
+                        </div><button onclick="closeUserForm()" class="text-white/80 hover:text-white ml-4">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg></button>
+                    </div>
+                </div><!-- Form Content -->
+                <form id="form-user-permohonan" class="p-8 space-y-6 max-h-[600px] overflow-y-auto">
+                    <!-- Section 1: Maklumat Peribadi -->
+                    <div class="space-y-5">
+                        <div class="pb-3 border-b-2 border-purple-200">
+                            <h3 class="text-lg font-semibold text-slate-800 flex items-center gap-2"><span
+                                    class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-bold text-sm">1</span>
+                                Maklumat Peribadi</h3>
+                            <p class="text-sm text-slate-500 mt-1 ml-10">Sila berikan maklumat diri anda</p>
+                        </div>
+                        <div class="ml-10 space-y-5">
+                            <div><label for="user-nama-pemohon" class="block text-sm font-medium text-slate-700 mb-2">
+                                    Nama Penuh <span class="text-red-500">*</span> </label> <input type="text"
+                                    id="user-nama-pemohon" required
+                                    class="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                                    placeholder="Masukkan nama penuh anda">
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div><label for="user-email-pemohon"
+                                        class="block text-sm font-medium text-slate-700 mb-2"> Alamat Email <span
+                                            class="text-red-500">*</span> </label> <input type="email"
+                                        id="user-email-pemohon" required
+                                        class="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                                        placeholder="contoh@email.com">
+                                </div>
+                                <div><label for="user-nombor-telefon"
+                                        class="block text-sm font-medium text-slate-700 mb-2"> Nombor Telefon <span
+                                            class="text-red-500">*</span> </label> <input type="tel"
+                                        id="user-nombor-telefon" required
+                                        class="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                                        placeholder="01X-XXXXXXX">
+                                </div>
+                            </div>
+                            <div><label for="user-cawangan" class="block text-sm font-medium text-slate-700 mb-2">
+                                    Cawangan <span class="text-red-500">*</span> </label> <input type="text"
+                                    id="user-cawangan" required
+                                    class="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                                    placeholder="Masukkan cawangan">
+                            </div>
+                        </div>
+                    </div><!-- Section 2: Jenis Permohonan -->
+                    <div class="space-y-5">
+                        <div class="pb-3 border-b-2 border-purple-200">
+                            <h3 class="text-lg font-semibold text-slate-800 flex items-center gap-2"><span
+                                    class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-bold text-sm">2</span>
+                                Jenis Permohonan</h3>
+                            <p class="text-sm text-slate-500 mt-1 ml-10">Pilih jenis peminjaman yang anda perlukan</p>
+                        </div>
+                        <div class="ml-10"><label class="block text-sm font-medium text-slate-700 mb-3"> Pilih satu atau
+                                kedua-duanya <span class="text-red-500">*</span> </label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><button type="button"
+                                    onclick="selectUserJenisPermohonan('Dewan', this)"
+                                    class="user-jenis-btn group p-5 border-2 border-slate-200 rounded-xl hover:border-purple-400 hover:bg-purple-50 transition-all text-left">
+                                    <div class="flex items-start gap-4">
+                                        <div
+                                            class="w-12 h-12 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                            <svg class="w-7 h-7 text-purple-600" fill="none" stroke="currentColor"
+                                                viewbox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="font-semibold text-slate-800 mb-1">Dewan</p>
+                                            <p class="text-xs text-slate-500">Peminjaman ruang dewan untuk acara atau
+                                                program</p>
+                                        </div>
+                                    </div>
+                                </button> <button type="button" onclick="selectUserJenisPermohonan('Peralatan', this)"
+                                    class="user-jenis-btn group p-5 border-2 border-slate-200 rounded-xl hover:border-purple-400 hover:bg-purple-50 transition-all text-left">
+                                    <div class="flex items-start gap-4">
+                                        <div
+                                            class="w-12 h-12 bg-gradient-to-br from-amber-100 to-orange-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                            <svg class="w-7 h-7 text-amber-600" fill="none" stroke="currentColor"
+                                                viewbox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="font-semibold text-slate-800 mb-1">Peralatan</p>
+                                            <p class="text-xs text-slate-500">Peminjaman peralatan seperti kerusi, meja,
+                                                dll</p>
+                                        </div>
+                                    </div>
+                                </button>
+                            </div><input type="hidden" id="user-jenis-permohonan-hidden" name="user-jenis-permohonan"
+                                required>
+                        </div>
+                    </div><!-- Section 3: Senarai Item (Peralatan) -->
+                    <div id="user-field-senarai-item" class="hidden space-y-5">
+                        <div class="pb-3 border-b-2 border-purple-200">
+                            <h3 class="text-lg font-semibold text-slate-800 flex items-center gap-2"><span
+                                    class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-bold text-sm">3</span>
+                                Pilih Peralatan</h3>
+                            <p class="text-sm text-slate-500 mt-1 ml-10">Tandakan peralatan yang ingin dipinjam</p>
+                        </div>
+                        <div class="ml-10"><label class="block text-sm font-medium text-slate-700 mb-3"> Senarai
+                                Peralatan Tersedia <span class="text-red-500">*</span> </label>
+                            <div id="user-item-dipinjam-container"
+                                class="border-2 border-slate-200 rounded-xl p-4 max-h-[250px] overflow-y-auto space-y-3 bg-slate-50">
+                                <p class="text-slate-400 text-sm text-center py-8">Tiada peralatan tersedia</p>
+                            </div><input type="hidden" id="user-item-dipinjam-hidden"> <input type="hidden"
+                                id="user-items-data-hidden">
+                        </div>
+                    </div><!-- Section 4: Tarikh & Masa -->
+                    <div class="space-y-5">
+                        <div class="pb-3 border-b-2 border-purple-200">
+                            <h3 class="text-lg font-semibold text-slate-800 flex items-center gap-2"><span
+                                    id="tarikh-section-number"
+                                    class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-bold text-sm">3</span>
+                                Tarikh &amp; Masa Penggunaan</h3>
+                            <p class="text-sm text-slate-500 mt-1 ml-10">Nyatakan bila anda memerlukan dewan/peralatan
+                            </p>
+                        </div>
+                        <div class="ml-10 space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div><label for="user-tarikh-mula"
+                                        class="block text-sm font-medium text-slate-700 mb-2"> Tarikh &amp; Masa Mula
+                                        <span class="text-red-500">*</span> </label> <input type="datetime-local"
+                                        id="user-tarikh-mula" required
+                                        class="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                                        onchange="checkUserDateOverlap()">
+                                </div>
+                                <div><label for="user-tarikh-pulang"
+                                        class="block text-sm font-medium text-slate-700 mb-2"> Tarikh &amp; Masa Tamat
+                                        <span class="text-red-500">*</span> </label> <input type="datetime-local"
+                                        id="user-tarikh-pulang" required
+                                        class="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                                        onchange="checkUserDateOverlap()">
+                                </div>
+                            </div>
+                            <div id="user-date-overlap-error"
+                                class="hidden border-l-4 border-red-500 bg-red-50 p-4 rounded-lg">
+                                <div class="flex items-start gap-3">
+                                    <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none"
+                                        stroke="currentColor" viewbox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <div class="flex-1">
+                                        <h4 class="text-sm font-semibold text-red-800 mb-1">Tarikh Tidak Tersedia</h4>
+                                        <p id="user-date-overlap-message" class="text-sm text-red-700"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- Section 5: Tujuan -->
+                    <div class="space-y-5">
+                        <div class="pb-3 border-b-2 border-purple-200">
+                            <h3 class="text-lg font-semibold text-slate-800 flex items-center gap-2"><span
+                                    id="tujuan-section-number"
+                                    class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-bold text-sm">4</span>
+                                Tujuan Peminjaman</h3>
+                            <p class="text-sm text-slate-500 mt-1 ml-10">Nyatakan tujuan atau program yang akan
+                                dijalankan</p>
+                        </div>
+                        <div class="ml-10"><label for="user-tujuan"
+                                class="block text-sm font-medium text-slate-700 mb-2"> Butiran Tujuan <span
+                                    class="text-red-500">*</span> </label> <textarea id="user-tujuan" required rows="4"
+                                class="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors resize-none"
+                                placeholder="Contoh: Mesyuarat bulanan cawangan, Program kursus kepimpinan, dll"></textarea>
+                            <p class="text-xs text-slate-500 mt-2">��� Sila nyatakan dengan jelas untuk memudahkan
+                                proses kelulusan</p>
+                        </div>
+                    </div><!-- Section 6: Terma & Syarat -->
+                    <div class="space-y-5">
+                        <div class="pb-3 border-b-2 border-purple-200">
+                            <h3 class="text-lg font-semibold text-slate-800 flex items-center gap-2"><span
+                                    id="terma-section-number"
+                                    class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-bold text-sm">6</span>
+                                Terma &amp; Syarat</h3>
+                            <p class="text-sm text-slate-500 mt-1 ml-10">Sila baca dan bersetuju dengan terma yang
+                                ditetapkan</p>
+                        </div>
+                        <div class="ml-10 space-y-4"><!-- Terma Dewan (muncul jika pilih Dewan) -->
+                            <div id="user-terma-dewan"
+                                class="hidden space-y-3 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 shadow-sm">
+                                <div class="flex items-center gap-3 pb-3 border-b border-blue-200">
+                                    <div
+                                        class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center shadow-md">
+                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor"
+                                            viewbox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-base font-bold text-blue-900">Untuk Penggunaan Dewan</h4>
+                                </div><label
+                                    class="flex items-start gap-4 cursor-pointer group bg-white p-4 rounded-lg border-2 border-blue-100 hover:border-blue-300 hover:bg-blue-50 transition-all">
+                                    <input type="checkbox" id="user-terma-dewan-tick" onchange="checkUserTerms()"
+                                        class="w-6 h-6 text-blue-600 border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 mt-0.5 flex-shrink-0 cursor-pointer">
+                                    <span
+                                        class="text-sm text-slate-700 flex-1 leading-relaxed group-hover:text-slate-900 font-medium">Saya
+                                        bersetuju dan memastikan dewan berada didalam keadaan yang bersih selepas
+                                        digunakan. Jika terdapat sampah sarap atau bekas makanan/minuman yang
+                                        ditinggalkan didalam dewan, saya mengambil penuh tanggungjawab untuk
+                                        membersihkannya.</span> </label>
+                            </div><!-- Terma Peralatan (muncul jika pilih Peralatan) -->
+                            <div id="user-terma-peralatan"
+                                class="hidden space-y-3 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl p-6 shadow-sm">
+                                <div class="flex items-center gap-3 pb-3 border-b border-amber-200">
+                                    <div
+                                        class="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center shadow-md">
+                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor"
+                                            viewbox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-base font-bold text-amber-900">Untuk Penggunaan Peralatan</h4>
+                                </div><label
+                                    class="flex items-start gap-4 cursor-pointer group bg-white p-4 rounded-lg border-2 border-amber-100 hover:border-amber-300 hover:bg-amber-50 transition-all">
+                                    <input type="checkbox" id="user-terma-peralatan-tick" onchange="checkUserTerms()"
+                                        class="w-6 h-6 text-amber-600 border-slate-300 rounded-md focus:ring-2 focus:ring-amber-500 mt-0.5 flex-shrink-0 cursor-pointer">
+                                    <span
+                                        class="text-sm text-slate-700 flex-1 leading-relaxed group-hover:text-slate-900 font-medium">Saya
+                                        bersetuju sebarang kerosakan atau kecacatan keatas peralatan yang dipinjam akan
+                                        dikenakan tindakan ganti rugi serta merta.</span> </label>
+                            </div><!-- Terma Umum (SENTIASA MUNCUL) -->
+                            <div
+                                class="bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-xl p-6 shadow-sm">
+                                <div class="flex items-center gap-3 pb-3 border-b border-purple-200">
+                                    <div
+                                        class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center shadow-md">
+                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor"
+                                            viewbox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <h4 class="text-base font-bold text-purple-900">Persetujuan Am</h4>
+                                </div><label
+                                    class="flex items-start gap-4 cursor-pointer group bg-white p-4 rounded-lg border-2 border-purple-100 hover:border-purple-300 hover:bg-purple-50 transition-all">
+                                    <input type="checkbox" id="user-terma-syarat-tick" onchange="checkUserTerms()"
+                                        class="w-6 h-6 text-purple-600 border-slate-300 rounded-md focus:ring-2 focus:ring-purple-500 mt-0.5 flex-shrink-0 cursor-pointer">
+                                    <span
+                                        class="text-sm text-slate-700 flex-1 leading-relaxed group-hover:text-slate-900 font-medium">Saya
+                                        bersetuju diatas syarat-syarat yang telah ditetapkan oleh Cawangan Senggara
+                                        Bangunan.</span> </label>
+                            </div><!-- Warning jika belum tick semua -->
+                            <div id="user-terma-warning"
+                                class="hidden bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-300 p-5 rounded-xl shadow-md">
+                                <div class="flex items-start gap-4">
+                                    <div
+                                        class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md">
+                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor"
+                                            viewbox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h5 class="text-base font-bold text-red-900 mb-2 flex items-center gap-2">⚠️
+                                            Perhatian - Terma Belum Lengkap</h5>
+                                        <p class="text-sm text-red-800 leading-relaxed">Anda mesti bersetuju dengan
+                                            <strong>SEMUA</strong> terma &amp; syarat yang berkaitan sebelum boleh
+                                            menghantar permohonan. Sila semak dan tandakan semua kotak persetujuan di
+                                            atas.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!-- Submit Button (HANYA muncul bila tick semua terma) -->
+                    <div id="user-submit-section"
+                        class="hidden bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mt-6 shadow-md">
+                        <button type="submit" id="btn-submit-user-permohonan"
+                            class="w-full px-8 py-5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all transform hover:scale-[1.02] active:scale-[0.98]">
+                            <span class="flex items-center justify-center gap-3">
+                                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg> ✅ Hantar Permohonan Sekarang </span> </button>
+                        <div class="mt-4 flex items-center justify-center gap-2 text-sm text-green-700">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <p class="font-medium">Permohonan akan diproses dalam tempoh 2-3 hari bekerja</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div><!-- USER FORM HANDLER -->
+    <!-- Modal Kategori -->
+    <div id="modal-kategori" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0" onclick="closeModal('modal-kategori')"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-slide">
+                <div class="p-6 border-b border-slate-100">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xl font-semibold text-slate-800">Tambah Kategori</h3><button
+                            onclick="closeModal('modal-kategori')" class="text-slate-400 hover:text-slate-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg></button>
+                    </div>
+                </div>
+                <form id="form-kategori" class="p-6 space-y-4">
+                    <div><label for="nama-kategori" class="block text-sm font-medium text-slate-700 mb-2">Nama
+                            Kategori</label> <input type="text" id="nama-kategori" required
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Masukkan nama kategori">
+                    </div>
+                    <div class="flex gap-3 pt-4"><button type="button" onclick="closeModal('modal-kategori')"
+                            class="flex-1 px-6 py-3 border border-slate-200 rounded-xl text-slate-600 font-medium hover:bg-slate-50 transition-colors">Batal</button>
+                        <button type="submit" id="btn-submit-kategori"
+                            class="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div><!-- Modal Peralatan -->
+    <div id="modal-peralatan" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0" onclick="closeModal('modal-peralatan')"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-slide">
+                <div class="p-6 border-b border-slate-100">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xl font-semibold text-slate-800">Tambah Peralatan</h3><button
+                            onclick="closeModal('modal-peralatan')" class="text-slate-400 hover:text-slate-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg></button>
+                    </div>
+                </div>
+                <form id="form-peralatan" class="p-6 space-y-4">
+                    <div><label for="kategori-peralatan" class="block text-sm font-medium text-slate-700 mb-2">Jenis
+                            Kategori</label> <select id="kategori-peralatan" required
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">Pilih Kategori</option>
+                        </select>
+                    </div>
+                    <div><label for="nama-peralatan" class="block text-sm font-medium text-slate-700 mb-2">Nama
+                            Peralatan</label> <input type="text" id="nama-peralatan" required
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Masukkan nama peralatan">
+                    </div>
+                    <div><label for="kuantiti-peralatan" class="block text-sm font-medium text-slate-700 mb-2">Kuantiti
+                            Unit</label> <input type="number" id="kuantiti-peralatan" required min="1"
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Masukkan jumlah unit">
+                    </div>
+                    <div class="flex gap-3 pt-4"><button type="button" onclick="closeModal('modal-peralatan')"
+                            class="flex-1 px-6 py-3 border border-slate-200 rounded-xl text-slate-600 font-medium hover:bg-slate-50 transition-colors">Batal</button>
+                        <button type="submit" id="btn-submit-peralatan"
+                            class="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div><!-- Modal Tindakan Admin -->
+    <div id="modal-tindakan" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0" onclick="closeModal('modal-tindakan')"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90%] overflow-auto animate-slide">
+                <div class="p-6 border-b border-slate-100">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xl font-semibold text-slate-800">Tindakan Admin</h3><button
+                            onclick="closeModal('modal-tindakan')" class="text-slate-400 hover:text-slate-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg></button>
+                    </div>
+                </div><!-- Detail Permohonan -->
+                <div class="p-6 border-b border-slate-100 bg-slate-50">
+                    <h4 class="text-sm font-semibold text-slate-800 mb-4">Butiran Permohonan</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="text-xs font-medium text-slate-500 uppercase tracking-wider">Nama
+                                Pemohon</label>
+                            <p id="detail-nama" class="text-slate-800 font-medium mt-1">-</p>
+                        </div>
+                        <div><label class="text-xs font-medium text-slate-500 uppercase tracking-wider">Email</label>
+                            <p id="detail-email" class="text-slate-800 font-medium mt-1">-</p>
+                        </div>
+                        <div><label class="text-xs font-medium text-slate-500 uppercase tracking-wider">No.
+                                Telefon</label>
+                            <p id="detail-telefon" class="text-slate-800 font-medium mt-1">-</p>
+                        </div>
+                        <div><label class="text-xs font-medium text-slate-500 uppercase tracking-wider">Cawangan</label>
+                            <p id="detail-cawangan" class="text-slate-800 font-medium mt-1">-</p>
+                        </div>
+                        <div><label class="text-xs font-medium text-slate-500 uppercase tracking-wider">Jenis
+                                Permohonan</label>
+                            <p id="detail-jenis" class="text-slate-800 font-medium mt-1">-</p>
+                        </div>
+                        <div><label class="text-xs font-medium text-slate-500 uppercase tracking-wider">Item</label>
+                            <p id="detail-items" class="text-slate-800 font-medium mt-1">-</p>
+                        </div>
+                        <div><label class="text-xs font-medium text-slate-500 uppercase tracking-wider">Tarikh
+                                Mula</label>
+                            <p id="detail-tarikh-mula" class="text-slate-800 font-medium mt-1">-</p>
+                        </div>
+                        <div><label class="text-xs font-medium text-slate-500 uppercase tracking-wider">Tarikh
+                                Tamat</label>
+                            <p id="detail-tarikh-tamat" class="text-slate-800 font-medium mt-1">-</p>
+                        </div>
+                        <div class="md:col-span-2"><label
+                                class="text-xs font-medium text-slate-500 uppercase tracking-wider">Tujuan</label>
+                            <p id="detail-tujuan" class="text-slate-800 font-medium mt-1">-</p>
+                        </div>
+                    </div>
+                </div>
+                <form id="form-tindakan" class="p-6 space-y-4"><input type="hidden" id="tindakan-id">
+                    <div><label for="status-permohonan"
+                            class="block text-sm font-medium text-slate-700 mb-2">Status</label> <select
+                            id="status-permohonan" required
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="Dalam Proses">Dalam Proses</option>
+                            <option value="Diluluskan">Diluluskan</option>
+                            <option value="Ditolak">Ditolak</option>
+                            <option value="Selesai">Selesai</option>
+                        </select>
+                    </div>
+                    <div><label for="catatan-admin" class="block text-sm font-medium text-slate-700 mb-2">Catatan
+                            Admin</label> <textarea id="catatan-admin" rows="3"
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Tambah catatan..."></textarea>
+                    </div>
+                    <div class="flex gap-3 pt-4"><button type="button" onclick="closeModal('modal-tindakan')"
+                            class="flex-1 px-6 py-3 border border-slate-200 rounded-xl text-slate-600 font-medium hover:bg-slate-50 transition-colors">Batal</button>
+                        <button type="submit" id="btn-submit-tindakan"
+                            class="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div><!-- Modal Sharelink Info -->
+    <div id="modal-sharelink" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0" onclick="closeModal('modal-sharelink')"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl animate-slide">
+                <div class="p-6 border-b border-slate-100">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor"
+                                    viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-semibold text-slate-800">🔗 Sharelink Borang User</h3>
+                                <p class="text-sm text-slate-500">Kongsi link ini kepada pengguna untuk isi borang</p>
+                            </div>
+                        </div><button onclick="closeModal('modal-sharelink')"
+                            class="text-slate-400 hover:text-slate-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg></button>
+                    </div>
+                </div>
+                <div class="p-6 space-y-6"><!-- Link Section -->
+                    <div
+                        class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-6 border-2 border-purple-200">
+                        <label class="block text-sm font-semibold text-purple-900 mb-3">���� Pautan Borang</label>
+                        <div class="flex items-center gap-3"><input type="text" id="sharelink-url" readonly value=""
+                                class="flex-1 px-4 py-3 bg-white border-2 border-purple-300 rounded-lg text-slate-700 font-mono text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                            <button onclick="copySharelink()"
+                                class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium flex items-center gap-2 transition-colors whitespace-nowrap">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                </svg> Salin Link </button>
+                        </div>
+                        <p class="text-xs text-purple-700 mt-3">💡 <strong>Tip:</strong> Klik "Salin Link" dan kongsi
+                            dengan pengguna melalui WhatsApp, Email, atau platform lain.</p>
+                    </div><!-- Preview Button -->
+                    <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor"
+                                    viewbox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium text-slate-800">Preview Borang User</p>
+                                <p class="text-sm text-slate-500">Lihat bagaimana user akan nampak borang ini</p>
+                            </div>
+                        </div><button onclick="openModal('modal-user-form'); closeModal('modal-sharelink');"
+                            class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors">
+                            👁️ Preview </button>
+                    </div><!-- Instructions -->
+                    <div class="space-y-3">
+                        <h4 class="font-semibold text-slate-800 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg> Cara Guna Sharelink:
+                        </h4>
+                        <div class="space-y-2 pl-7">
+                            <div class="flex items-start gap-2"><span class="text-purple-600 font-bold">1.</span>
+                                <p class="text-sm text-slate-600">Klik butang <strong>"Salin Link"</strong> di atas</p>
+                            </div>
+                            <div class="flex items-start gap-2"><span class="text-purple-600 font-bold">2.</span>
+                                <p class="text-sm text-slate-600">Kongsi link tersebut kepada pengguna melalui WhatsApp,
+                                    Email, SMS, atau platform lain</p>
+                            </div>
+                            <div class="flex items-start gap-2"><span class="text-purple-600 font-bold">3.</span>
+                                <p class="text-sm text-slate-600">Pengguna klik link dan akan terus ke borang permohonan
+                                    peminjaman</p>
+                            </div>
+                            <div class="flex items-start gap-2"><span class="text-purple-600 font-bold">4.</span>
+                                <p class="text-sm text-slate-600">Selepas user hantar, permohonan akan muncul dalam
+                                    <strong>Senarai Permohonan</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-lg">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                                viewbox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <div>
+                                <h5 class="text-sm font-semibold text-amber-800 mb-1">⚠️ Penting</h5>
+                                <p class="text-xs text-amber-700">Link ini hanya berfungsi jika Canva Code ini sudah
+                                    di-publish. Pastikan publish dahulu sebelum kongsi link!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div><!-- Toast -->
+    <div id="toast" class="fixed bottom-4 right-4 z-50 hidden">
+        <div class="bg-slate-800 text-white px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 toast">
+            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg><span id="toast-message">Berjaya disimpan!</span>
+        </div>
+    </div><!-- Modal Delete Confirmation -->
+    <div id="modal-delete" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0" onclick="closeModal('modal-delete')"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm animate-slide">
+                <div class="p-6 text-center">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-slate-800 mb-2">Padam Item?</h3>
+                    <p class="text-slate-500 text-sm mb-6">Tindakan ini tidak boleh dibatalkan.</p><input type="hidden"
+                        id="delete-id"> <input type="hidden" id="delete-type">
+                    <div class="flex gap-3"><button onclick="closeModal('modal-delete')"
+                            class="flex-1 px-6 py-3 border border-slate-200 rounded-xl text-slate-600 font-medium hover:bg-slate-50 transition-colors">Batal</button>
+                        <button onclick="confirmDelete()" id="btn-confirm-delete"
+                            class="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors">Padam</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
