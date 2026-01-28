@@ -1924,11 +1924,11 @@ function renderLaporanDewanTable(permohonanData) {
     const tbody = document.getElementById('laporan-dewan-table');
     if (!tbody) return;
 
-    // Robust Hall Search (Case-insensitive)
+    // Filter approved hall applications
     const dewanApps = permohonanData.filter(p => {
         const jenis = (p.jenisPermohonan || '').toLowerCase();
         const items = (p.items || '').toLowerCase();
-        return jenis.includes('dewan') || items.includes('dewan');
+        return (jenis.includes('dewan') || items.includes('dewan')) && p.status === 'Diluluskan';
     });
 
     if (dewanApps.length === 0) {
@@ -1936,38 +1936,97 @@ function renderLaporanDewanTable(permohonanData) {
         return;
     }
 
-    // Simplified Executive View
-    tbody.innerHTML = `
-        <tr class="hover:bg-slate-50 transition-colors">
-            <td class="px-6 py-6">
+    const now = new Date();
+    // Sort by date
+    const sortedApps = [...dewanApps].sort((a, b) => new Date(a.tarikhMulaPinjam) - new Date(b.tarikhMulaPinjam));
+
+    const pastEvents = sortedApps.filter(p => new Date(p.tarikhMulaPinjam) < now);
+    const upcomingEvents = sortedApps.filter(p => new Date(p.tarikhMulaPinjam) >= now);
+
+    let html = `
+        <tr class="bg-indigo-50/50">
+            <td colspan="4" class="px-6 py-3 text-[10px] font-black text-indigo-600 uppercase tracking-widest">
+                Rekod Ringkasan Fasiliti
+            </td>
+        </tr>
+        <tr class="border-b border-slate-100">
+            <td class="px-6 py-6" colspan="2">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center border border-indigo-200 shadow-sm">
                          <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                     </div>
                     <div>
                         <p class="font-black text-slate-900 text-lg leading-tight uppercase">Dewan Sri Kinabatangan</p>
-                        <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mt-1">Fasiliti Utama Utama</p>
+                        <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mt-1">Status Asset: Sedia Digunakan</p>
                     </div>
                 </div>
             </td>
             <td class="px-6 py-6 text-center">
-                <div class="inline-flex flex-col items-center bg-indigo-50 px-6 py-3 rounded-2xl border border-indigo-100">
-                    <span class="text-2xl font-black text-indigo-700">${dewanApps.length}</span>
-                    <span class="text-[9px] text-indigo-400 uppercase font-black tracking-widest mt-1">Acara</span>
+                <div class="inline-flex flex-col items-center bg-white px-6 py-3 rounded-2xl border border-slate-200">
+                    <span class="text-2xl font-black text-slate-800">${dewanApps.length}</span>
+                    <span class="text-[9px] text-slate-400 uppercase font-black tracking-widest mt-1">Total Acara</span>
                 </div>
             </td>
-            <td class="px-6 py-6">
-                 <div class="flex flex-col">
-                    <span class="text-[10px] text-slate-400 uppercase font-black mb-1">Status Fasiliti</span>
-                    <span class="status-badge bg-emerald-50 text-emerald-700 border-emerald-200">Optimal / Sedia</span>
-                 </div>
-            </td>
             <td class="px-6 py-6 text-right">
-                <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Terakhir Digunakan</p>
-                <p class="text-sm font-black text-slate-700">${new Date(dewanApps[dewanApps.length - 1].tarikhMulaPinjam).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Kadar Penggunaan</p>
+                <p class="text-sm font-black text-indigo-600">${Math.min(100, Math.round((dewanApps.length / 30) * 100))}% Bulanan</p>
             </td>
         </tr>
     `;
+
+    // Past Events Section
+    html += `
+        <tr class="bg-slate-50">
+            <td colspan="4" class="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                🕒 Acara Terdahulu (${pastEvents.length})
+            </td>
+        </tr>
+    `;
+    if (pastEvents.length === 0) {
+        html += `<tr><td colspan="4" class="px-6 py-4 text-center text-xs text-slate-400 italic">Tiada acara terdahulu</td></tr>`;
+    } else {
+        pastEvents.slice(-3).reverse().forEach(p => {
+            html += `
+                <tr class="border-b border-slate-50 transition-colors hover:bg-slate-50/50">
+                    <td class="px-6 py-4">
+                        <p class="text-sm font-bold text-slate-700">${p.tujuan || 'Aktiviti Dewan'}</p>
+                        <p class="text-[10px] text-slate-400 tracking-wide">${p.namaPemohon}</p>
+                    </td>
+                    <td class="px-6 py-4 text-xs text-slate-500">${new Date(p.tarikhMulaPinjam).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                    <td class="px-6 py-4 text-center"><span class="px-2 py-1 bg-slate-100 text-slate-600 text-[9px] font-bold rounded-full uppercase">Selesai</span></td>
+                    <td class="px-6 py-4 text-right text-[10px] font-black text-slate-400 uppercase tracking-tighter">Arsip</td>
+                </tr>
+            `;
+        });
+    }
+
+    // Upcoming Events Section
+    html += `
+        <tr class="bg-indigo-50/30">
+            <td colspan="4" class="px-6 py-4 text-[10px] font-black text-indigo-600 uppercase tracking-widest">
+                📅 Acara Akan Datang (${upcomingEvents.length})
+            </td>
+        </tr>
+    `;
+    if (upcomingEvents.length === 0) {
+        html += `<tr><td colspan="4" class="px-6 py-4 text-center text-xs text-slate-400 italic">Tiada acara akan datang</td></tr>`;
+    } else {
+        upcomingEvents.slice(0, 3).forEach(p => {
+            html += `
+                <tr class="border-b border-slate-50 transition-colors hover:bg-indigo-50/20">
+                    <td class="px-6 py-4">
+                        <p class="text-sm font-bold text-indigo-900">${p.tujuan || 'Aktiviti Dewan'}</p>
+                        <p class="text-[10px] text-indigo-400 tracking-wide">${p.namaPemohon}</p>
+                    </td>
+                    <td class="px-6 py-4 text-xs text-indigo-600 font-bold">${new Date(p.tarikhMulaPinjam).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                    <td class="px-6 py-4 text-center"><span class="px-2 py-1 bg-indigo-100 text-indigo-700 text-[9px] font-bold rounded-full uppercase tracking-widest shadow-sm">Booking</span></td>
+                    <td class="px-6 py-4 text-right text-[10px] font-black text-indigo-600 uppercase tracking-tighter">Sedia</td>
+                </tr>
+            `;
+        });
+    }
+
+    tbody.innerHTML = html;
 }
 
 // Date Filters for Laporan
@@ -2241,7 +2300,8 @@ function applyLogoSettings() {
 // --- WORD-LIKE EDITOR FOR REPORTS ---
 function executeAdvancedPrint(editMode = false) {
     const showSummary = document.getElementById('print-summary').checked;
-    const showUsage = document.getElementById('print-usage').checked;
+    const showPeralatan = document.getElementById('print-peralatan').checked;
+    const showDewan = document.getElementById('print-dewan').checked;
 
     const startDate = document.getElementById('filter-tarikh-mula').value;
     const endDate = document.getElementById('filter-tarikh-akhir').value;
@@ -2268,17 +2328,18 @@ function executeAdvancedPrint(editMode = false) {
     // 2. Selection Toggle
     const summaryCards = document.getElementById('report-summary-cards');
     const summarySection = document.getElementById('report-summary-section');
-    const combinedUsage = document.getElementById('report-usage-combined');
+    const peralatanSection = document.getElementById('report-section-peralatan');
+    const dewanSection = document.getElementById('report-section-dewan');
 
     if (summaryCards) summaryCards.classList.toggle('print-hide', !showSummary);
     if (summarySection) summarySection.classList.toggle('print-hide', !showSummary);
-    if (combinedUsage) combinedUsage.classList.toggle('print-hide', !showUsage);
+    if (peralatanSection) peralatanSection.classList.toggle('print-hide', !showPeralatan);
+    if (dewanSection) dewanSection.classList.toggle('print-hide', !showDewan);
 
     closeModal('modal-pilih-laporan');
 
     if (editMode) {
-        toggleWordMode(true);
-        showToast('📝 Mod Editor Aktif. Sila klik teks untuk ubah.');
+        openReportPreviewModal();
     } else {
         triggerPrintAction();
     }
@@ -2298,39 +2359,221 @@ function triggerPrintAction() {
     }, 250);
 }
 
+function openReportPreviewModal() {
+    const modal = document.getElementById('reportPreviewModal');
+    const editableArea = document.getElementById('reportEditableArea');
+    if (!modal || !editableArea) return;
+
+    // 1. Get current data and filters
+    const startDate = document.getElementById('filter-tarikh-mula').value;
+    const endDate = document.getElementById('filter-tarikh-akhir').value;
+    const dateText = (startDate || endDate)
+        ? `TEMPOH: ${startDate || '-'} HINGGA ${endDate || '-'}`
+        : "TEMPOH: SEPANJANG MASA";
+
+    const activeStatus = document.getElementById('report-active-status').textContent;
+    const topItem = document.getElementById('report-top-item').textContent;
+    const approvalRate = document.getElementById('report-approval-rate').textContent;
+
+    // 2. Determine visibility from checkboxes
+    const showSummary = document.getElementById('print-summary').checked;
+    const showPeralatan = document.getElementById('print-peralatan').checked;
+    const showDewan = document.getElementById('print-dewan').checked;
+
+    // 3. Build Structured HTML Content
+    let reportContent = `
+        <div class="report-document-content">
+            <!-- Formal Header -->
+            <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px;">
+                <h1 style="font-size: 24pt; font-weight: 900; margin: 0; color: #1e1b4b;">LAPORAN PENGURUSAN</h1>
+                <h2 style="font-size: 14pt; font-weight: 700; margin: 5px 0 0; color: #4338ca; text-transform: uppercase;">Penggunaan Dewan dan Peralatan</h2>
+                <p style="font-size: 10pt; font-weight: 600; margin-top: 15px; color: #64748b;">${dateText}</p>
+            </div>
+
+            ${showSummary ? `
+            <!-- Executive Summary -->
+            <div style="margin-bottom: 40px;">
+                <h3 style="font-size: 12pt; font-weight: 900; text-transform: uppercase; border-left: 4px solid #4f46e5; padding-left: 10px; margin-bottom: 20px;">1. Ringkasan Eksekutif</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                    <tr>
+                        <td style="padding: 15px; border: 1px solid #e2e8f0; width: 33.3%;">
+                            <p style="font-size: 9pt; color: #64748b; margin: 0; text-transform: uppercase; font-weight: 700;">Status Keaktifan</p>
+                            <p style="font-size: 16pt; font-weight: 900; margin: 5px 0 0; color: #1e293b;">${activeStatus}</p>
+                        </td>
+                        <td style="padding: 15px; border: 1px solid #e2e8f0; width: 33.3%;">
+                            <p style="font-size: 9pt; color: #64748b; margin: 0; text-transform: uppercase; font-weight: 700;">Item Paling Laris</p>
+                            <p style="font-size: 16pt; font-weight: 900; margin: 5px 0 0; color: #1e293b;">${topItem}</p>
+                        </td>
+                        <td style="padding: 15px; border: 1px solid #e2e8f0; width: 33.3%;">
+                            <p style="font-size: 9pt; color: #64748b; margin: 0; text-transform: uppercase; font-weight: 700;">Kadar Kelulusan</p>
+                            <p style="font-size: 16pt; font-weight: 900; margin: 5px 0 0; color: #1e293b;">${approvalRate}</p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            ` : ''}
+
+            ${showPeralatan ? `
+            <!-- Peralatan Analysis -->
+            <div style="margin-bottom: 40px;">
+                <h3 style="font-size: 12pt; font-weight: 900; text-transform: uppercase; border-left: 4px solid #4f46e5; padding-left: 10px; margin-bottom: 20px;">2. Analisis Peminjaman Peralatan</h3>
+                <div style="margin-bottom: 20px;">
+                    <p style="font-size: 10pt; color: #475569; margin-bottom: 15px;">Berikut adalah senarai peralatan yang telah dipinjam bagi tempoh berkenaan:</p>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background-color: #f8fafc;">
+                                <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: left; font-size: 9pt; text-transform: uppercase;">Peralatan</th>
+                                <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: left; font-size: 9pt; text-transform: uppercase;">Kategori</th>
+                                <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: center; font-size: 9pt; text-transform: uppercase;">Unit Dipinjam</th>
+                                <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: right; font-size: 9pt; text-transform: uppercase;">Status Inventori</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${document.getElementById('laporan-peralatan-table').innerHTML}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            ` : ''}
+
+            ${showDewan ? `
+            <!-- Dewan Analysis -->
+            <div style="margin-bottom: 40px;">
+                <h3 style="font-size: 12pt; font-weight: 900; text-transform: uppercase; border-left: 4px solid #4f46e5; padding-left: 10px; margin-bottom: 20px;">3. Analisis Penggunaan Dewan</h3>
+                <div style="margin-bottom: 20px;">
+                    <p style="font-size: 10pt; color: #475569; margin-bottom: 15px;">Ringkasan penggunaan fasiliti dewan:</p>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        ${document.getElementById('laporan-dewan-table').innerHTML}
+                    </table>
+                </div>
+            </div>
+            ` : ''}
+
+            <div style="margin-top: 50px; border-top: 1px solid #e2e8f0; padding-top: 20px; text-align: left; font-size: 9pt; color: #64748b; display: flex; justify-content: space-between; align-items: start;">
+                <div>
+                    <p style="margin: 0; font-weight: 700; color: #475569;">Sistem Pengurusan Peralatan & Dewan</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="margin: 0; italic">Dijana secara automatik pada: ${new Date().toLocaleString('ms-MY', { day: 'numeric', month: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true }).toUpperCase().replace(/AM/g, 'PAGI').replace(/PM/g, 'PTG')}</p>
+                </div>
+            </div>
+        </div>
+    `;
+
+    editableArea.innerHTML = reportContent;
+    modal.classList.add('active');
+
+    // Clean up any stray classes or styles from cloned tables
+    editableArea.querySelectorAll('tr, td, th').forEach(el => {
+        el.className = el.className.replace(/hover:bg-slate-50|transition-colors/g, '');
+    });
+
+    // Initialize listeners
+    initReportPreviewListeners();
+}
+
+function closeReportPreviewModal() {
+    const modal = document.getElementById('reportPreviewModal');
+    if (modal) modal.classList.remove('active');
+}
+
+function initReportPreviewListeners() {
+    if (window.reportPreviewInitialized) return;
+
+    document.getElementById('closeReportPreview').onclick = closeReportPreviewModal;
+    document.getElementById('cancelReportPreview').onclick = closeReportPreviewModal;
+
+    document.getElementById('confirmPrintBtn').onclick = () => {
+        const editableArea = document.getElementById('reportEditableArea');
+        const reportSource = document.getElementById('report-editable-area');
+        if (editableArea && reportSource) {
+            reportSource.innerHTML = editableArea.innerHTML;
+            closeReportPreviewModal();
+            triggerPrintAction();
+        }
+    };
+
+    document.getElementById('saveReportSettingsBtn').onclick = () => {
+        showToast('✅ Tetapan laporan telah dikemaskini.');
+    };
+
+    document.getElementById('increaseFontSize').onclick = () => changeFontSize(2);
+    document.getElementById('decreaseFontSize').onclick = () => changeFontSize(-2);
+
+    document.getElementById('reportLogoInput').onchange = function (e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const img = document.createElement('img');
+                img.src = event.target.result;
+                img.id = 'report-dynamic-logo';
+                img.style.width = document.getElementById('logoWidthSlider').value + 'px';
+                const logoTarget = document.getElementById('reportEditableArea').querySelector('#print-logo-target');
+                if (logoTarget) {
+                    logoTarget.innerHTML = '';
+                    logoTarget.appendChild(img);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    document.getElementById('logoWidthSlider').oninput = function (e) {
+        const val = e.target.value;
+        document.getElementById('logoWidthValue').textContent = val + 'px';
+        const img = document.getElementById('report-dynamic-logo');
+        if (img) img.style.width = val + 'px';
+        else {
+            const logoTarget = document.getElementById('reportEditableArea').querySelector('#print-logo-target img');
+            if (logoTarget) logoTarget.style.width = val + 'px';
+        }
+    };
+
+    window.reportPreviewInitialized = true;
+}
+
+function switchRibbonTab(tabId) {
+    document.querySelectorAll('.ribbon-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    document.querySelectorAll('.ribbon-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`.ribbon-tab[onclick="switchRibbonTab('${tabId}')"]`).classList.add('active');
+}
+
+function transformText(type) {
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+    let target = selection.commonAncestorContainer;
+    if (target.nodeType === 3) target = target.parentElement;
+    target.style.textTransform = type;
+}
+
+function updateLineHeight(val) {
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+    let target = selection.commonAncestorContainer;
+    if (target.nodeType === 3) target = target.parentElement;
+    target.style.lineHeight = val;
+}
+
+window.formatDoc = function (cmd, value = null) {
+    document.execCommand(cmd, false, value);
+}
+
 function toggleWordMode(active) {
     const toolbar = document.getElementById('editor-toolbar');
     const content = document.getElementById('page-laporan');
-
     if (active) {
         toolbar.classList.remove('hidden');
         content.classList.add('editing-active');
-
-        // Target all text-bearing elements precisely
-        const targetTags = 'p, span, h1, h2, h3, h4, th, td, div:not([id])';
-        document.querySelectorAll(`#page-laporan :is(${targetTags})`).forEach(el => {
-            // Only make it editable if it contains actual text and no complex children
-            if (el.innerText.trim().length > 0) {
-                el.setAttribute('contenteditable', 'true');
-            }
-        });
-
-        // Ensure interactive elements like SVG/Buttons don't become editable
-        document.querySelectorAll('#page-laporan svg, #page-laporan button').forEach(el => {
-            el.setAttribute('contenteditable', 'false');
+        document.querySelectorAll(`#page-laporan p, #page-laporan span, #page-laporan h1, #page-laporan h2, #page-laporan h3`).forEach(el => {
+            if (el.innerText.trim().length > 0) el.setAttribute('contenteditable', 'true');
         });
     } else {
         toolbar.classList.add('hidden');
         content.classList.remove('editing-active');
-        document.querySelectorAll('#page-laporan [contenteditable]').forEach(el => {
-            el.removeAttribute('contenteditable');
-        });
+        document.querySelectorAll('#page-laporan [contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
     }
-}
-
-function formatDoc(cmd) {
-    document.execCommand(cmd, false, null);
-    // Visual feedback for bold/italic if needed
 }
 
 function changeFontSize(delta) {
