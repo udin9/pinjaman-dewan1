@@ -6,11 +6,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Pengurusan Dewan Sri Kinabatangan</title>
+    <!-- Tailwind CSS FIRST (before SDKs) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/_sdk/element_sdk.js"></script>
     <script src="/_sdk/data_sdk.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap"
         rel="stylesheet">
+    <!-- Firebase Initialization - will be done in script.js -->
+    <script>
+        // Placeholder - Firebase init moved to script.js after page load
+        window.firebaseReady = false;
+    </script>
 
 </head>
 
@@ -34,6 +43,32 @@
                 <p class="text-center text-indigo-100">DEWAN SRI KINABATANGAN</p>
             </div>
             <form id="form-login" class="p-6 md:p-8 space-y-6">
+                <div id="google-signin-container" class="w-full">
+                    <button type="button" id="btn-google-signin"
+                        class="w-full bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-800 py-3 rounded-xl font-medium transition-all transform hover:scale-[1.02] shadow-sm flex items-center justify-center gap-3">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24">
+                            <path fill="#EA4335"
+                                d="M5.266 9.765A7.077 7.077 0 0 1 12 4.9a7.1 7.1 0 0 1 4.82 1.783l3.58-3.58A11.908 11.908 0 0 0 12 0C7.27 0 3.198 2.698.96 6.65l4.305 3.115z" />
+                            <path fill="#34A853"
+                                d="M12 24c2.97 0 5.46-.998 7.28-2.738l-3.528-2.74a4.9 4.9 0 0 1-3.752 1.478c-2.882 0-5.336-1.988-6.214-4.983H2.909v3.195C3.962 22.56 7.67 24 12 24z" />
+                            <path fill="#4A90E2"
+                                d="M5.786 14.876c-.293-.935-.458-1.922-.458-2.876s.165-1.941.458-2.876L2.481 5.961A11.884 11.884 0 0 0 0 12c0 1.946.474 3.787 1.313 5.404l4.473-3.528z" />
+                            <path fill="#FBBC05"
+                                d="M12 5.217a4.9 4.9 0 0 1 3.465 1.345l2.612-2.612A7.091 7.091 0 0 0 12 4.9c-4.33 0-8.038 2.44-9.091 6.05l4.305 3.115c.878-2.995 3.332-4.848 6.214-4.848z" />
+                        </svg>
+                        <span>Log Masuk dengan Google</span>
+                    </button>
+                </div>
+
+                <div class="relative my-6">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-slate-200"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-slate-100 text-slate-500">atau</span>
+                    </div>
+                </div>
+
                 <div><label for="username" class="block text-sm font-medium text-slate-700 mb-2">Username</label> <input
                         type="text" id="username" required
                         class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
@@ -46,11 +81,125 @@
                 </div>
                 <div id="login-error" class="hidden text-red-600 text-sm text-center p-3 bg-red-50 rounded-lg">
                     Username atau password tidak sah
-                </div><button type="button" id="btn-login" onclick="handleLogin()"
+                </div>
+
+                <button type="submit"
                     class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 rounded-xl font-medium transition-all transform hover:scale-[1.02] shadow-lg">
                     Log Masuk </button>
             </form>
+
+            <!--------login firebase auth-->
+
+            <script type="module">
+                // 1️⃣ Import SDK Firebase yang diperlukan
+                import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+                import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+                import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+
+                // 2️⃣ Config Firebase
+                const firebaseConfig = {
+                    apiKey: "AIzaSyAYBhrerG2yfHk-xFna0tLI-QbaVDNaV5M",
+                    authDomain: "sistem-alat-ganti.firebaseapp.com",
+                    projectId: "sistem-alat-ganti",
+                    storageBucket: "sistem-alat-ganti.firebasestorage.app",
+                    messagingSenderId: "974832583504",
+                    appId: "1:974832583504:web:2001b035fb35093c252255",
+                    measurementId: "G-44E4RC3EC8"
+                };
+
+                // 3️⃣ Initialize Firebase
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                const db = getFirestore(app);
+
+                // ===== LOGIN =====
+                const loginForm = document.getElementById('loginForm');
+                const loadingOverlay = document.getElementById('loadingOverlay');
+
+                function showLoader() { if (loadingOverlay) loadingOverlay.style.display = 'flex'; }
+                function hideLoader() { if (loadingOverlay) loadingOverlay.style.display = 'none'; }
+
+                loginForm.addEventListener("submit", async (e) => {
+                    e.preventDefault();
+                    showLoader();
+
+                    const email = document.getElementById("username").value.trim();
+                    const password = document.getElementById("password").value.trim();
+
+                    try {
+                        // Login user
+                        const userCred = await signInWithEmailAndPassword(auth, email, password);
+                        const uid = userCred.user.uid;
+
+
+
+                        // Ambil role & name dari Firestore
+                        const snap = await getDoc(doc(db, "users", uid));
+                        if (!snap.exists()) {
+                            alert("❌ Role tidak dijumpai di Firestore!");
+                            return;
+                        }
+
+                        const userData = snap.data();
+
+                        // Simpan session
+                        sessionStorage.setItem("loggedIn", "true");
+                        sessionStorage.setItem("currentUser", JSON.stringify({
+                            uid,
+                            email,
+                            role: userData.role,
+                            name: userData.name
+                        }));
+
+                        alert(`✅ Selamat datang, ${userData.name}`);
+                        window.location.href = "dashboard.html";
+
+                    } catch (err) {
+                        console.error("Login error:", err);
+                        alert("❌ Email / password salah");
+                    } finally {
+                        hideLoader();
+                    }
+                });
+
+
+                // ===== SESSION CHECK =====
+                if (sessionStorage.getItem("loggedIn") !== "true") {
+                    window.location.href = "index.html";
+                }
+
+                // ===== PAPAR DATA USER (CONTOH) =====
+                async function loadUsers() {
+                    const tableBody = document.getElementById("userTable");
+                    if (!tableBody) return;
+
+                    tableBody.innerHTML = "";
+
+                    const snapshot = await getDocs(collection(db, "users"));
+                    snapshot.forEach(docSnap => {
+                        const u = docSnap.data();
+                        const tr = document.createElement("tr");
+                        tr.innerHTML = `
+            <td>${u.name}</td>
+            <td>${u.email}</td>
+            <td>${u.role}</td>
+            `;
+                        tableBody.appendChild(tr);
+                    });
+                }
+
+                loadUsers();
+            </script>
+
+
+
+
+            <script src="script.js" defer></script>
+
+
+
         </div>
+
         <!----LOGIN PAGE END-->
 
         <!----MAIN APP START-->
@@ -1479,35 +1628,37 @@
                                     Pemohon</label>
                                 <p id="detail-nama" class="text-slate-800 font-medium mt-1">-</p>
                             </div>
-                            <div><label class="text-xs font-medium text-slate-500 uppercase tracking-wider">Email</label>
+                            <div><label
+                                    class="text-xs font-medium text-slate-500 uppercase tracking-wider">Email</label>
                                 <p id="detail-email" class="text-slate-800 font-medium mt-1">-</p>
                             </div>
                             <div><label class="text-xs font-medium text-slate-500 uppercase tracking-wider">No.
                                     Telefon</label>
-                            <p id="detail-telefon" class="text-slate-800 font-medium mt-1">-</p>
-                        </div>
-                        <div><label class="text-xs font-medium text-slate-500 uppercase tracking-wider">Cawangan</label>
-                            <p id="detail-cawangan" class="text-slate-800 font-medium mt-1">-</p>
-                        </div>
-                        <div><label class="text-xs font-medium text-slate-500 uppercase tracking-wider">Jenis
-                                Permohonan</label>
-                            <p id="detail-jenis" class="text-slate-800 font-medium mt-1">-</p>
-                        </div>
-                        <div><label class="text-xs font-medium text-slate-500 uppercase tracking-wider">Item</label>
-                            <p id="detail-items" class="text-slate-800 font-medium mt-1">-</p>
-                        </div>
-                        <div><label class="text-xs font-medium text-slate-500 uppercase tracking-wider">Tarikh
-                                Mula</label>
-                            <p id="detail-tarikh-mula" class="text-slate-800 font-medium mt-1">-</p>
-                        </div>
-                        <div><label class="text-xs font-medium text-slate-500 uppercase tracking-wider">Tarikh
-                                Tamat</label>
-                            <p id="detail-tarikh-tamat" class="text-slate-800 font-medium mt-1">-</p>
-                        </div>
-                        <div class="sm:col-span-2"><label
-                                class="text-xs font-medium text-slate-500 uppercase tracking-wider">Tujuan</label>
-                            <p id="detail-tujuan" class="text-slate-800 font-medium mt-1 break-words">-</p>
-                        </div>
+                                <p id="detail-telefon" class="text-slate-800 font-medium mt-1">-</p>
+                            </div>
+                            <div><label
+                                    class="text-xs font-medium text-slate-500 uppercase tracking-wider">Cawangan</label>
+                                <p id="detail-cawangan" class="text-slate-800 font-medium mt-1">-</p>
+                            </div>
+                            <div><label class="text-xs font-medium text-slate-500 uppercase tracking-wider">Jenis
+                                    Permohonan</label>
+                                <p id="detail-jenis" class="text-slate-800 font-medium mt-1">-</p>
+                            </div>
+                            <div><label class="text-xs font-medium text-slate-500 uppercase tracking-wider">Item</label>
+                                <p id="detail-items" class="text-slate-800 font-medium mt-1">-</p>
+                            </div>
+                            <div><label class="text-xs font-medium text-slate-500 uppercase tracking-wider">Tarikh
+                                    Mula</label>
+                                <p id="detail-tarikh-mula" class="text-slate-800 font-medium mt-1">-</p>
+                            </div>
+                            <div><label class="text-xs font-medium text-slate-500 uppercase tracking-wider">Tarikh
+                                    Tamat</label>
+                                <p id="detail-tarikh-tamat" class="text-slate-800 font-medium mt-1">-</p>
+                            </div>
+                            <div class="sm:col-span-2"><label
+                                    class="text-xs font-medium text-slate-500 uppercase tracking-wider">Tujuan</label>
+                                <p id="detail-tujuan" class="text-slate-800 font-medium mt-1 break-words">-</p>
+                            </div>
                         </div>
                     </div>
                     <form id="form-tindakan" class="p-4 md:p-6 space-y-4"><input type="hidden" id="tindakan-id">
@@ -1518,17 +1669,18 @@
                                 <option value="Dalam Proses">Dalam Proses</option>
                                 <option value="Diluluskan">Diluluskan</option>
                                 <option value="Ditolak">Ditolak</option>
-                            <option value="Selesai">Selesai</option>
-                        </select>
-                    </div>
-                    <div><label for="catatan-admin" class="block text-sm font-medium text-slate-700 mb-2">Catatan
-                            Admin</label> <textarea id="catatan-admin" rows="3"
-                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                            placeholder="Tambah catatan..."></textarea>
+                                <option value="Selesai">Selesai</option>
+                            </select>
+                        </div>
+                        <div><label for="catatan-admin" class="block text-sm font-medium text-slate-700 mb-2">Catatan
+                                Admin</label> <textarea id="catatan-admin" rows="3"
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="Tambah catatan..."></textarea>
                         </div>
                         <div id="items-edit-section" class="hidden">
                             <label class="block text-sm font-medium text-slate-700 mb-4">Item Dipinjam (Edit)</label>
-                            <div id="items-edit-container" class="border border-slate-200 rounded-xl p-4 md:p-5 max-h-[300px] md:max-h-[400px] overflow-y-auto space-y-4 bg-slate-50">
+                            <div id="items-edit-container"
+                                class="border border-slate-200 rounded-xl p-4 md:p-5 max-h-[300px] md:max-h-[400px] overflow-y-auto space-y-4 bg-slate-50">
                                 <p class="text-slate-400 text-sm text-center py-6">Tiada item</p>
                             </div>
                         </div>
@@ -1538,11 +1690,13 @@
                                 class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-600"
                                 placeholder="Akan diisi apabila klik Selesai">
                         </div>
-                        <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4"><button type="button" onclick="closeModal('modal-tindakan')"
+                        <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4"><button type="button"
+                                onclick="closeModal('modal-tindakan')"
                                 class="px-4 sm:px-6 py-3 border border-slate-200 rounded-xl text-slate-600 font-medium hover:bg-slate-50 transition-colors order-2 sm:order-1">Batal</button>
                             <button type="button" id="btn-mark-selesai" onclick="markAsCompleted()"
                                 class="px-4 sm:px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 order-3 sm:order-2 text-sm sm:text-base">
-                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
