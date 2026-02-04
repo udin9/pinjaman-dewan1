@@ -1,3 +1,157 @@
+// ===== GOOGLE SHEETS DATABASE INTEGRATION =====
+// PENTING: Gantikan URL ini dengan URL deployment Apps Script anda
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzL57eQHAwH8NfhYqv9dSDwVjKl07RqKcN8R_seltGrTT4_szjIiiU1jxFHUGSAo4iLMg/exec'; // <- TUKAR INI!
+
+// Google Sheets Database API
+const GoogleSheetsDB = {
+    isConfigured: function () {
+        return GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== 'YOUR_GOOGLE_SCRIPT_URL_HERE';
+    },
+
+    // Test connection to Google Sheets
+    testConnection: async function () {
+        if (!this.isConfigured()) {
+            console.warn('⚠️ Google Sheets belum dikonfigurasi. Sila masukkan URL Apps Script.');
+            return { success: false, error: 'Not configured' };
+        }
+
+        try {
+            const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=test`);
+            const result = await response.json();
+            if (result.success) {
+                console.log('✅ Google Sheets Connected!', result);
+            }
+            return result;
+        } catch (error) {
+            console.error('❌ Google Sheets connection failed:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    // Fetch all data from Google Sheets
+    fetchAll: async function () {
+        if (!this.isConfigured()) return { success: false, data: [] };
+
+        try {
+            const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getAll`);
+            const result = await response.json();
+            console.log('📥 Data fetched from Google Sheets:', result);
+            return result;
+        } catch (error) {
+            console.error('❌ Fetch from Google Sheets failed:', error);
+            return { success: false, data: [], error: error.message };
+        }
+    },
+
+    // Add single item to Google Sheets
+    add: async function (type, item) {
+        if (!this.isConfigured()) return { success: false };
+
+        try {
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ action: 'add', type: type, item: item })
+            });
+            const result = await response.json();
+            console.log('📤 Data added to Google Sheets:', result);
+            return result;
+        } catch (error) {
+            console.error('❌ Add to Google Sheets failed:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    // Update item in Google Sheets
+    update: async function (type, id, item) {
+        if (!this.isConfigured()) return { success: false };
+
+        try {
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ action: 'update', type: type, id: id, item: item })
+            });
+            const result = await response.json();
+            console.log('📝 Data updated in Google Sheets:', result);
+            return result;
+        } catch (error) {
+            console.error('❌ Update Google Sheets failed:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    // Delete item from Google Sheets
+    delete: async function (type, id) {
+        if (!this.isConfigured()) return { success: false };
+
+        try {
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ action: 'delete', type: type, id: id })
+            });
+            const result = await response.json();
+            console.log('🗑️ Data deleted from Google Sheets:', result);
+            return result;
+        } catch (error) {
+            console.error('❌ Delete from Google Sheets failed:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    // Sync all local data to Google Sheets
+    syncToSheets: async function (allData) {
+        if (!this.isConfigured()) return { success: false };
+
+        try {
+            console.log('🔄 Syncing all data to Google Sheets...');
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ action: 'sync', allData: allData })
+            });
+            const result = await response.json();
+            console.log('✅ Sync complete:', result);
+            return result;
+        } catch (error) {
+            console.error('❌ Sync to Google Sheets failed:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    // Export localStorage data to Google Sheets (one-time export)
+    exportLocalToSheets: async function () {
+        const localData = JSON.parse(localStorage.getItem('dewanData') || '[]');
+        if (localData.length === 0) {
+            console.log('ℹ️ Tiada data untuk export');
+            return { success: false, error: 'No local data' };
+        }
+
+        console.log(`📤 Exporting ${localData.length} items to Google Sheets...`);
+        return await this.syncToSheets(localData);
+    },
+
+    // Import data from Google Sheets to localStorage
+    importFromSheets: async function () {
+        const result = await this.fetchAll();
+        if (result.success && result.data) {
+            localStorage.setItem('dewanData', JSON.stringify(result.data));
+            console.log(`📥 Imported ${result.data.length} items from Google Sheets`);
+
+            // Refresh UI
+            if (typeof DataStore !== 'undefined') {
+                DataStore.notify();
+            }
+            return { success: true, count: result.data.length };
+        }
+        return { success: false };
+    }
+};
+
+// Make GoogleSheetsDB available globally
+window.GoogleSheetsDB = GoogleSheetsDB;
+
 // ===== FIREBASE AUTH HANDLER =====
 let auth = null;
 let firebaseInitialized = false;
@@ -26,70 +180,70 @@ function getFirebaseReady() {
         }, 10000);
     });
 
-// Helper to show login errors in the UI
-function showLoginError(message, duration = 7000) {
-    const errDiv = document.getElementById('login-error');
-    const details = document.getElementById('login-error-details');
-    if (errDiv) errDiv.classList.remove('hidden');
-    if (details) {
-        details.textContent = message;
-        details.classList.remove('hidden');
-    }
-    console.error('Login error:', message);
-    // Auto-hide after a while
-    setTimeout(() => {
-        if (errDiv) errDiv.classList.add('hidden');
-        if (details) details.classList.add('hidden');
-    }, duration);
-}
-
-// Load Firebase SDKs dynamically if they are not already present. This helps when CDN is blocked or network is slow.
-async function ensureFirebaseSDKs(timeoutMs = 10000) {
-    if (typeof firebase !== 'undefined') return;
-    if (window._firebaseLoadAttempted) return; // prevent duplicate attempts
-    window._firebaseLoadAttempted = true;
-
-    const statusEl = document.getElementById('login-status');
-    if (statusEl) {
-        statusEl.textContent = 'Memuat Firebase SDK...';
-        statusEl.classList.remove('hidden');
-    }
-
-    const urls = [
-        'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js',
-        'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js',
-        'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js'
-    ];
-
-    function loadScript(url) {
-        return new Promise((resolve, reject) => {
-            const s = document.createElement('script');
-            s.src = url;
-            s.async = true;
-            s.onload = () => resolve();
-            s.onerror = () => reject(new Error('Gagal memuat ' + url));
-            document.head.appendChild(s);
-        });
-    }
-
-    // Timeout wrapper
-    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout memuat Firebase SDK')), timeoutMs));
-
-    try {
-        await Promise.race([Promise.all(urls.map(loadScript)), timeoutPromise]);
-        if (statusEl) {
-            statusEl.textContent = 'Firebase SDK dimuat';
-            setTimeout(() => statusEl.classList.add('hidden'), 1500);
+    // Helper to show login errors in the UI
+    function showLoginError(message, duration = 7000) {
+        const errDiv = document.getElementById('login-error');
+        const details = document.getElementById('login-error-details');
+        if (errDiv) errDiv.classList.remove('hidden');
+        if (details) {
+            details.textContent = message;
+            details.classList.remove('hidden');
         }
-        console.log('✅ Firebase SDKs loaded dynamically');
-    } catch (err) {
-        if (statusEl) {
-            statusEl.textContent = 'Gagal memuat Firebase SDK';
-        }
-        console.error('❌ ensureFirebaseSDKs error:', err);
-        throw err;
+        console.error('Login error:', message);
+        // Auto-hide after a while
+        setTimeout(() => {
+            if (errDiv) errDiv.classList.add('hidden');
+            if (details) details.classList.add('hidden');
+        }, duration);
     }
-} 
+
+    // Load Firebase SDKs dynamically if they are not already present. This helps when CDN is blocked or network is slow.
+    async function ensureFirebaseSDKs(timeoutMs = 10000) {
+        if (typeof firebase !== 'undefined') return;
+        if (window._firebaseLoadAttempted) return; // prevent duplicate attempts
+        window._firebaseLoadAttempted = true;
+
+        const statusEl = document.getElementById('login-status');
+        if (statusEl) {
+            statusEl.textContent = 'Memuat Firebase SDK...';
+            statusEl.classList.remove('hidden');
+        }
+
+        const urls = [
+            'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js',
+            'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js',
+            'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js'
+        ];
+
+        function loadScript(url) {
+            return new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = url;
+                s.async = true;
+                s.onload = () => resolve();
+                s.onerror = () => reject(new Error('Gagal memuat ' + url));
+                document.head.appendChild(s);
+            });
+        }
+
+        // Timeout wrapper
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout memuat Firebase SDK')), timeoutMs));
+
+        try {
+            await Promise.race([Promise.all(urls.map(loadScript)), timeoutPromise]);
+            if (statusEl) {
+                statusEl.textContent = 'Firebase SDK dimuat';
+                setTimeout(() => statusEl.classList.add('hidden'), 1500);
+            }
+            console.log('✅ Firebase SDKs loaded dynamically');
+        } catch (err) {
+            if (statusEl) {
+                statusEl.textContent = 'Gagal memuat Firebase SDK';
+            }
+            console.error('❌ ensureFirebaseSDKs error:', err);
+            throw err;
+        }
+    }
 }
 
 // Initialize Firebase when page is ready
@@ -266,9 +420,11 @@ window.handleGoogleSignIn = async function () {
     }
 };
 
+//form data js untuk bahagian user,admin dan table permohonan form+table
+
 document.getElementById('form-user-permohonan').addEventListener('submit', async (e) => {
     e.preventDefault();
-    console.log('ðŸš€ User form submitted');
+    console.log('🚀 User form submitted');
 
     const btn = document.getElementById('btn-submit-user-permohonan');
     const originalHTML = btn.innerHTML;
@@ -406,9 +562,11 @@ document.getElementById('form-permohonan').addEventListener('submit', async (e) 
     btn.textContent = 'Hantar Permohonan';
 });
 
-// Data Persistence & Storage
+// Data Persistence & Storage - with Google Sheets Sync
 const DataStore = {
     key: 'dewanData',
+    syncEnabled: true, // Toggle to enable/disable Google Sheets sync
+
     get: function () {
         try {
             const data = localStorage.getItem(this.key);
@@ -418,35 +576,88 @@ const DataStore = {
             return [];
         }
     },
+
     save: function (data) {
         localStorage.setItem(this.key, JSON.stringify(data));
         allData = data;
         this.notify();
     },
-    add: function (item) {
+
+    add: async function (item) {
         const data = this.get();
-        item.__backendId = Date.now().toString(); // Generate simple ID
-        // Ensure type is set if missing (fallback to permohonan for user form)
+        item.__backendId = Date.now().toString();
         if (!item.type && item.nama && item.tarikhMulaPinjam) {
             item.type = 'permohonan';
         }
         console.log('📦 Saving Item to DataStore:', item);
         data.push(item);
         this.save(data);
+
+        // Sync to Google Sheets (async, non-blocking)
+        if (this.syncEnabled && GoogleSheetsDB.isConfigured()) {
+            GoogleSheetsDB.add(item.type, item).catch(err => {
+                console.warn('⚠️ Google Sheets sync failed (add):', err);
+            });
+        }
+
         return Promise.resolve({ isOk: true });
     },
-    remove: function (id) {
+
+    update: async function (id, updatedItem) {
         let data = this.get();
-        data = data.filter(d => d.__backendId !== id);
+        const index = data.findIndex(d => d.__backendId === id);
+
+        if (index !== -1) {
+            const oldType = data[index].type;
+            data[index] = { ...data[index], ...updatedItem };
+            this.save(data);
+
+            if (this.syncEnabled && GoogleSheetsDB.isConfigured()) {
+                GoogleSheetsDB.update(oldType || updatedItem.type, id, data[index]).catch(err => {
+                    console.warn('⚠️ Google Sheets sync failed (update):', err);
+                });
+            }
+
+            return Promise.resolve({ isOk: true });
+        }
+        return Promise.resolve({ isOk: false, error: 'Item not found' });
+    },
+
+    remove: async function (id) {
+        let data = this.get();
+        // Convert id to string for consistent comparison
+        const targetId = String(id);
+
+        const item = data.find(d => String(d.__backendId) === targetId);
+        const itemType = item ? item.type : 'permohonan';
+
+        // Filter out item using strict string comparison
+        const initialLength = data.length;
+        data = data.filter(d => String(d.__backendId) !== targetId);
+
+        if (data.length === initialLength) {
+            console.warn('⚠️ Item not found via ID for local delete:', targetId);
+        } else {
+            console.log('🗑️ Local item deleted:', targetId);
+        }
+
         this.save(data);
+
+        // Sync to Google Sheets
+        if (this.syncEnabled && GoogleSheetsDB.isConfigured()) {
+            // Delete from Sheets regardless of local finding (in case local was already gone but remote exists)
+            GoogleSheetsDB.delete(itemType, targetId).catch(err => {
+                console.warn('⚠️ Google Sheets sync failed (delete):', err);
+            });
+        }
+
         return Promise.resolve({ isOk: true });
     },
+
     notify: function () {
-        // Update global var
         allData = this.get();
         console.log('🔄 DataStore Notify: refreshing UI');
 
-        // Bulletproof UI updates - individual crashes won't stop others
         const tasks = [
             { name: 'Dashboard', fn: updateDashboard },
             { name: 'Permohonan', fn: renderPermohonan },
@@ -467,12 +678,59 @@ const DataStore = {
             }
         });
     },
+
     getByDateRange: function (startDate, endDate) {
         return this.get().filter(d => {
             if (d.type !== 'permohonan') return false;
             const appDate = new Date(d.tarikhMulaPinjam);
             return appDate >= startDate && appDate <= endDate;
         });
+    },
+
+    // Load data from Google Sheets
+    loadFromGoogleSheets: async function () {
+        if (!GoogleSheetsDB.isConfigured()) {
+            console.log('ℹ️ Google Sheets not configured, using localStorage only');
+            return false;
+        }
+
+        try {
+            console.log('📥 Loading data from Google Sheets...');
+            const result = await GoogleSheetsDB.fetchAll();
+
+            if (result.success && result.data && result.data.length > 0) {
+                this.save(result.data);
+                console.log(`✅ Loaded ${result.data.length} items from Google Sheets`);
+                return true;
+            } else {
+                console.log('ℹ️ No data in Google Sheets, using localStorage');
+                return false;
+            }
+        } catch (error) {
+            console.error('❌ Failed to load from Google Sheets:', error);
+            return false;
+        }
+    },
+
+    // Full sync - push all local data to Google Sheets
+    syncAllToSheets: async function () {
+        if (!GoogleSheetsDB.isConfigured()) {
+            console.warn('⚠️ Google Sheets not configured');
+            return { success: false };
+        }
+
+        const allData = this.get();
+        console.log(`🔄 Syncing ${allData.length} items to Google Sheets...`);
+
+        const result = await GoogleSheetsDB.syncToSheets(allData);
+
+        if (result.success) {
+            showToast('✅ Data berjaya di-sync ke Google Sheets!');
+        } else {
+            showToast('❌ Gagal sync ke Google Sheets');
+        }
+
+        return result;
     }
 };
 
@@ -488,6 +746,7 @@ window.addEventListener('storage', (e) => {
 let allData = DataStore.get();
 let currentConfig = {};
 let isLoggedIn = false;
+
 
 // Initialize Element SDK (Keep existing)
 const defaultConfig = {
@@ -542,6 +801,145 @@ if (window.elementSdk) {
     });
 }
 
+// ===== GOOGLE SHEETS UI FUNCTIONS =====
+
+// Test Google Sheets connection
+async function testGoogleSheetsConnection() {
+    const indicator = document.getElementById('sheets-status-indicator');
+    const statusText = document.getElementById('sheets-status-text');
+
+    if (!indicator || !statusText) return;
+
+    // Show loading state
+    indicator.className = 'w-3 h-3 rounded-full bg-yellow-400 animate-pulse';
+    statusText.textContent = 'Menguji sambungan...';
+
+    try {
+        const result = await GoogleSheetsDB.testConnection();
+
+        if (result.success) {
+            indicator.className = 'w-3 h-3 rounded-full bg-green-500';
+            statusText.textContent = '✅ Sambungan berjaya!';
+            showToast('✅ Google Sheets berjaya disambungkan!');
+        } else {
+            indicator.className = 'w-3 h-3 rounded-full bg-red-500';
+            statusText.textContent = '❌ ' + (result.error || 'Gagal menyambung');
+            showToast('❌ Gagal menyambung ke Google Sheets');
+        }
+    } catch (error) {
+        indicator.className = 'w-3 h-3 rounded-full bg-red-500';
+        statusText.textContent = '❌ Ralat: ' + error.message;
+        showToast('❌ Ralat sambungan');
+    }
+}
+
+// Sync/Export data to Google Sheets
+async function syncDataToSheets() {
+    if (!GoogleSheetsDB.isConfigured()) {
+        showToast('⚠️ Sila konfigurasi Google Sheets terlebih dahulu');
+        return;
+    }
+
+    showToast('🔄 Mengexport data ke Google Sheets...');
+
+    try {
+        const result = await DataStore.syncAllToSheets();
+        if (result.success) {
+            console.log('✅ Export complete:', result);
+        }
+    } catch (error) {
+        console.error('Export error:', error);
+        showToast('❌ Gagal export: ' + error.message);
+    }
+}
+
+// Load/Import data from Google Sheets
+async function loadDataFromSheets() {
+    if (!GoogleSheetsDB.isConfigured()) {
+        showToast('⚠️ Sila konfigurasi Google Sheets terlebih dahulu');
+        return;
+    }
+
+    showToast('📥 Memuat data dari Google Sheets...');
+
+    try {
+        const loaded = await DataStore.loadFromGoogleSheets();
+        if (loaded) {
+            showToast('✅ Data berjaya dimuat dari Google Sheets!');
+        } else {
+            showToast('ℹ️ Tiada data di Google Sheets');
+        }
+    } catch (error) {
+        console.error('Import error:', error);
+        showToast('❌ Gagal import: ' + error.message);
+    }
+}
+
+// Toggle auto-sync feature
+function toggleAutoSync() {
+    const toggle = document.getElementById('auto-sync-toggle');
+    if (toggle) {
+        DataStore.syncEnabled = toggle.checked;
+        console.log('Auto-sync:', DataStore.syncEnabled ? 'ON' : 'OFF');
+        showToast(DataStore.syncEnabled ? '✅ Auto-sync diaktifkan' : '⏸️ Auto-sync dinyahaktifkan');
+    }
+}
+
+// Update Google Sheets status indicator on page load
+function updateSheetsStatusIndicator() {
+    const indicator = document.getElementById('sheets-status-indicator');
+    const statusText = document.getElementById('sheets-status-text');
+
+    if (!indicator || !statusText) return;
+
+    if (GoogleSheetsDB.isConfigured()) {
+        indicator.className = 'w-3 h-3 rounded-full bg-yellow-400';
+        statusText.textContent = 'Dikonfigurasi - Klik test untuk sahkan';
+    } else {
+        indicator.className = 'w-3 h-3 rounded-full bg-slate-400';
+        statusText.textContent = 'Belum dikonfigurasi';
+    }
+}
+
+// Auto-load data from Google Sheets on page load
+async function autoLoadFromGoogleSheets() {
+    if (!GoogleSheetsDB.isConfigured()) {
+        console.log('ℹ️ Google Sheets not configured, using localStorage');
+        return;
+    }
+
+    try {
+        console.log('🔄 Auto-loading data from Google Sheets...');
+
+        const result = await GoogleSheetsDB.fetchAll();
+
+        if (result.success && result.data && result.data.length > 0) {
+            // Save to localStorage and update UI
+            localStorage.setItem('dewanData', JSON.stringify(result.data));
+            allData = result.data;
+
+            // Update UI
+            if (typeof DataStore !== 'undefined') {
+                DataStore.notify();
+            }
+
+            console.log(`✅ Auto-loaded ${result.data.length} items from Google Sheets`);
+
+            // Update status indicator to green
+            const indicator = document.getElementById('sheets-status-indicator');
+            const statusText = document.getElementById('sheets-status-text');
+            if (indicator) indicator.className = 'w-3 h-3 rounded-full bg-green-500';
+            if (statusText) statusText.textContent = '✅ Data dimuat dari Google Sheets';
+
+        } else {
+            console.log('ℹ️ No data in Google Sheets or fetch failed, using localStorage');
+        }
+    } catch (error) {
+        console.warn('⚠️ Auto-load from Google Sheets failed:', error.message);
+        // Silently fail - just use localStorage
+    }
+}
+
 // Check Login & Page State on Load
 window.addEventListener('DOMContentLoaded', () => {
     try {
@@ -551,6 +949,17 @@ window.addEventListener('DOMContentLoaded', () => {
         // 1. Apply UI Visuals immediately
         applyBgSettings();
         applyLogoSettings();
+
+        // 2. Update Google Sheets status indicator
+        updateSheetsStatusIndicator();
+
+        // 3. Auto-load data from Google Sheets (if configured)
+        autoLoadFromGoogleSheets().then(() => {
+            // Start looping for live updates only if NOT in user mode (Admin side needs to know)
+            if (!isUserMode) {
+                startRealtimeSync();
+            }
+        });
 
         if (isUserMode) {
             // User Mode: Hide Login & Admin App, Show User Form ONLY
@@ -2025,7 +2434,7 @@ function checkAdminTerms() {
 
 // --- OPEN TINDAKAN (Admin Urus Permohonan) ---
 function openTindakan(id) {
-    const permohonan = allData.find(d => d.__backendId === id);
+    const permohonan = allData.find(d => String(d.__backendId) === String(id));
     if (!permohonan) {
         showToast('Data tidak dijumpai');
         return;
@@ -2156,7 +2565,7 @@ function updateTindakanItemsDisplay() {
 // Mark permohonan as completed with timestamp
 function markAsCompleted() {
     const id = document.getElementById('tindakan-id').value;
-    const data = allData.find(d => d.__backendId === id);
+    const data = allData.find(d => String(d.__backendId) === String(id));
 
     if (!data) {
         showToast('❌ Data tidak dijumpai');
@@ -2181,7 +2590,7 @@ function markAsCompleted() {
 
 // Quick mark as completed from table
 function quickMarkCompleted(id) {
-    const data = allData.find(d => d.__backendId === id);
+    const data = allData.find(d => String(d.__backendId) === String(id));
 
     if (!data) {
         showToast('❌ Data tidak dijumpai');
@@ -3831,4 +4240,96 @@ function saveEditorChanges() {
     toggleWordMode(false);
     showToast('✅ Tetapan disimpan. Memulakan cetakan...');
     setTimeout(triggerPrintAction, 500);
+}
+
+// ===== REAL-TIME SYNC & NOTIFICATION =====
+let isSyncing = false;
+const SYNC_INTERVAL = 15000; // Check every 15 seconds
+
+function startRealtimeSync() {
+    console.log('📡 Starting Real-time Sync (Interval: 15s)');
+
+    // Initial sync handles first load, so we just set interval
+    setInterval(async () => {
+        // Don't sync if user is not logged in (admin only)
+        if (localStorage.getItem('isLoggedIn') !== 'true') return;
+
+        if (isSyncing || !GoogleSheetsDB.isConfigured()) return;
+
+        isSyncing = true;
+        try {
+            // 1. Fetch silently
+            // We use fetchAll which is already defined in GoogleSheetsDB
+            // But we want to avoid full UI parsing unless needed
+            const result = await fetch(`${GOOGLE_SCRIPT_URL}?action=getAll`).then(r => r.json());
+
+            if (result.success && result.data) {
+                const currentCount = allData.length;
+                const newCount = result.data.length;
+
+                // 2. Check for differences (simple count check first)
+                if (newCount !== currentCount) {
+                    console.log(`🔔 New update detected! ${currentCount} -> ${newCount}`);
+
+                    const isNewData = newCount > currentCount;
+
+                    // Save & Update UI
+                    localStorage.setItem('dewanData', JSON.stringify(result.data));
+                    allData = result.data;
+                    DataStore.notify();
+
+                    // 3. Notify Admin if data ADDED
+                    if (isNewData) {
+                        playNotificationSound();
+                        showToast(`🔔 ${newCount - currentCount} permohonan/data baru diterima!`);
+
+                        // Update indicator to show activity
+                        const indicator = document.getElementById('sheets-status-indicator');
+                        if (indicator) {
+                            indicator.className = 'w-3 h-3 rounded-full bg-blue-500 animate-pulse';
+                            setTimeout(() => indicator.className = 'w-3 h-3 rounded-full bg-green-500', 2000);
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.warn('Silent sync warning:', err.message);
+        } finally {
+            isSyncing = false;
+        }
+    }, SYNC_INTERVAL);
+}
+
+// Simple Notification Sound (Beep)
+function playNotificationSound() {
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(500, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+
+        oscillator.start();
+        setTimeout(() => oscillator.stop(), 200); // 200ms beep
+
+        // Second beep
+        setTimeout(() => {
+            const osc2 = audioCtx.createOscillator();
+            const gain2 = audioCtx.createGain();
+            osc2.connect(gain2);
+            gain2.connect(audioCtx.destination);
+            osc2.frequency.setValueAtTime(800, audioCtx.currentTime);
+            gain2.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            osc2.start();
+            setTimeout(() => osc2.stop(), 200);
+        }, 250);
+
+    } catch (e) {
+        console.error('Audio play failed', e);
+    }
 }

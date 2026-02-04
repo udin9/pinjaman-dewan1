@@ -1,8 +1,8 @@
 # Check for Python
 if (Get-Command python -ErrorAction SilentlyContinue) {
     Write-Host "Starting local server using Python..." -ForegroundColor Cyan
-    Write-Host "URL: http://localhost:8000" -ForegroundColor Green
-    python -m http.server 8000
+    Write-Host "URL: http://localhost:8080" -ForegroundColor Green
+    python -m http.server 8080
 } 
 # Fallback to Node.js / npx
 elseif (Get-Command npx -ErrorAction SilentlyContinue) {
