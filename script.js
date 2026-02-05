@@ -1,3 +1,37 @@
+// ===== SYSTEM CLOCK INITIALIZATION =====
+function updateClock() {
+    try {
+        const now = new Date();
+        const options = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+        const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+
+        const timeStr = now.toLocaleTimeString('ms-MY', options).toUpperCase();
+        const dateStr = now.toLocaleDateString('ms-MY', dateOptions);
+
+        const ids = ['clock', 'date', 'dash-clock', 'dash-date', 'dash-clock-big', 'dash-date-big'];
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                const val = (id.includes('date')) ? dateStr : timeStr;
+                if (el.tagName === 'INPUT') el.value = val;
+                else el.textContent = val;
+            }
+        });
+    } catch (e) { console.error('Clock error:', e); }
+}
+
+function startClock() {
+    if (window.clockInterval) clearInterval(window.clockInterval);
+    updateClock();
+    window.clockInterval = setInterval(updateClock, 1000);
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startClock);
+} else {
+    startClock();
+}
+
 // ===== GOOGLE SHEETS DATABASE INTEGRATION =====
 // PENTING: Gantikan URL ini dengan URL deployment Apps Script anda
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzL57eQHAwH8NfhYqv9dSDwVjKl07RqKcN8R_seltGrTT4_szjIiiU1jxFHUGSAo4iLMg/exec'; // <- TUKAR INI!
@@ -4449,49 +4483,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Call on load
 document.addEventListener('DOMContentLoaded', attachUserFormHandler);
-
-//jam dan waktu
-
-
-// Jam dan Waktu Dinamik
-function updateClock() {
-    const clockEl = document.getElementById('clock');
-    const dateEl = document.getElementById('date');
-    const dashClockEl = document.getElementById('dash-clock');
-    const dashDateEl = document.getElementById('dash-date');
-
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('ms-MY', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: true
-    }).toUpperCase();
-
-    const dateStr = now.toLocaleDateString('ms-MY', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
-
-    // Update Header Clock
-    if (clockEl) clockEl.textContent = timeStr;
-    if (dateEl) dateEl.textContent = dateStr;
-
-    // Update Dashboard Card Clock
-    if (dashClockEl) dashClockEl.textContent = timeStr;
-    if (dashDateEl) dashDateEl.textContent = dateStr;
-
-    // Update Big Clock Card
-    const dashClockBig = document.getElementById('dash-clock-big');
-    const dashDateBig = document.getElementById('dash-date-big');
-    if (dashClockBig) dashClockBig.textContent = timeStr;
-    if (dashDateBig) dashDateBig.textContent = dateStr;
-}
-
-if (typeof clockInterval !== 'undefined') clearInterval(clockInterval);
-const clockInterval = setInterval(updateClock, 1000);
-updateClock();
-
 
