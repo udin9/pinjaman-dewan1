@@ -578,3 +578,45 @@ body {
     height: 100%;
     object-fit: contain;
 }
+
+/* Premium DateTime Widget */
+.datetime-container {
+    text-align: right;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    transition: all 0.3s ease;
+}
+
+.datetime-container:hover {
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+#clock {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #1e293b;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+}
+
+#date {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Responsive adjustment for mobile */
+@media (max-width: 640px) {
+    .datetime-container {
+        display: none;
+        /* Hide on small screens to save space in header */
+    }
+}

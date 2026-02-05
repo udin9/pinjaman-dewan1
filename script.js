@@ -4449,3 +4449,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Call on load
 document.addEventListener('DOMContentLoaded', attachUserFormHandler);
+
+//jam dan waktu
+
+
+// Jam dan Waktu Dinamik
+function updateClock() {
+    const clockEl = document.getElementById('clock');
+    const dateEl = document.getElementById('date');
+    const dashClockEl = document.getElementById('dash-clock');
+    const dashDateEl = document.getElementById('dash-date');
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('ms-MY', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+    }).toUpperCase();
+
+    const dateStr = now.toLocaleDateString('ms-MY', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    // Update Header Clock
+    if (clockEl) clockEl.textContent = timeStr;
+    if (dateEl) dateEl.textContent = dateStr;
+
+    // Update Dashboard Card Clock
+    if (dashClockEl) dashClockEl.textContent = timeStr;
+    if (dashDateEl) dashDateEl.textContent = dateStr;
+
+    // Update Big Clock Card
+    const dashClockBig = document.getElementById('dash-clock-big');
+    const dashDateBig = document.getElementById('dash-date-big');
+    if (dashClockBig) dashClockBig.textContent = timeStr;
+    if (dashDateBig) dashDateBig.textContent = dateStr;
+}
+
+if (typeof clockInterval !== 'undefined') clearInterval(clockInterval);
+const clockInterval = setInterval(updateClock, 1000);
+updateClock();
+
+
