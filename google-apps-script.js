@@ -16,7 +16,8 @@
 const SHEET_NAMES = {
     permohonan: 'Permohonan',
     kategori: 'Kategori',
-    peralatan: 'Peralatan'
+    peralatan: 'Peralatan',
+    tetapan: 'Tetapan'
 };
 
 // ===== MAIN HANDLERS =====
@@ -320,7 +321,8 @@ function syncAllData(allData) {
     const grouped = {
         permohonan: allData.filter(d => d.type === 'permohonan'),
         kategori: allData.filter(d => d.type === 'kategori'),
-        peralatan: allData.filter(d => d.type === 'peralatan')
+        peralatan: allData.filter(d => d.type === 'peralatan'),
+        tetapan: allData.filter(d => d.type === 'tetapan')
     };
 
     // Sync each sheet
@@ -382,14 +384,41 @@ function initializeSheets() {
     const kategoriHeaders = ['__backendId', 'namaKategori', 'createdAt'];
 
     // Peralatan headers
-    const peralatanHeaders = ['__backendId', 'kategori', 'namaPeralatan', 'kuantiti', 'kuantitiTersedia', 'createdAt'];
+    const peralatanHeaders = [
+        '__backendId',
+        'kategori',
+        'namaPeralatan',
+        'kuantiti',
+        'kuantitiTersedia',
+        'totalBaru',
+        'totalRosak',
+        'lastUpdateBaru',
+        'lastUpdateRosak',
+        'lastUpdateJumlah',
+        'createdAt'
+    ];
 
-    // Create/update sheets
-    createOrUpdateSheet(ss, SHEET_NAMES.permohonan, permohonanHeaders);
-    createOrUpdateSheet(ss, SHEET_NAMES.kategori, kategoriHeaders);
-    createOrUpdateSheet(ss, SHEET_NAMES.peralatan, peralatanHeaders);
+    // Tetapan headers
+    const tetapanHeaders = ['__backendId', 'key', 'value', 'updatedAt'];
 
-    return 'Sheets initialized successfully!';
+    const sheetsConfig = [
+        { name: SHEET_NAMES.permohonan, headers: permohonanHeaders },
+        { name: SHEET_NAMES.kategori, headers: kategoriHeaders },
+        { name: SHEET_NAMES.peralatan, headers: peralatanHeaders },
+        { name: SHEET_NAMES.tetapan, headers: tetapanHeaders }
+    ];
+
+    sheetsConfig.forEach(cfg => {
+        let sheet = ss.getSheetByName(cfg.name);
+        if (!sheet) {
+            sheet = ss.insertSheet(cfg.name);
+        }
+        sheet.clear();
+        sheet.getRange(1, 1, 1, cfg.headers.length).setValues([cfg.headers]);
+        sheet.setFrozenRows(1);
+    });
+
+    return { success: true, message: 'Sheets initialized successfully' };
 }
 
 function createOrUpdateSheet(ss, sheetName, headers) {

@@ -34,7 +34,7 @@ if (document.readyState === 'loading') {
 
 // ===== GOOGLE SHEETS DATABASE INTEGRATION =====
 // PENTING: Gantikan URL ini dengan URL deployment Apps Script anda
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxyqWPMxjMmJUWRkmfI9C6dxwRCcutYXEwRw6HgisQxo7vZrG8S5MgtTwv8TfqSOjci/exec'; // <- TUKAR INI!
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwfs87D-SdyF0r39GmIH237Sm6-CFr-u-WemwmM1TewwiE_RMyMLmHXNfBVsKW4BuykRA/exec'; // <- TUKAR INI!
 
 // Google Sheets Database API
 const GoogleSheetsDB = {
@@ -1662,6 +1662,10 @@ function openEditPeralatan(id) {
     document.getElementById('nama-peralatan').value = data.namaPeralatan || '';
     document.getElementById('kuantiti-peralatan').value = data.kuantiti || 0;
 
+    // Reset transaction fields
+    document.getElementById('tambah-baru').value = 0;
+    document.getElementById('item-rosak').value = 0;
+
     // Update modal UI
     const modal = document.getElementById('modal-peralatan');
     if (modal) {
@@ -2716,34 +2720,26 @@ function populateItemsEditContainer(permohonan) {
     // Re-attach event listeners
     document.querySelectorAll('.item-tindakan-checkbox').forEach(checkbox => {
         checkbox.addEventListener('change', function () {
-            const qty = document.getElementById(`qty-tindakan-${this.id.replace('item-tindakan-', '')}`);
-            if (qty) qty.disabled = !this.checked;
-            updateTindakanItemsDisplay();
+            const id = this.id.replace('item-tindakan-', '');
+            const qtyInput = document.getElementById(`qty-tindakan-${id}`);
+            if (qtyInput) {
+                qtyInput.disabled = !this.checked;
+            }
         });
     });
 }
 
-// Update items display and itemsData after editing
-function updateTindakanItemsDisplay() {
+// Collect selected items from the tindakan modal
+function collectTindakanItems() {
     const selected = [];
     document.querySelectorAll('.item-tindakan-checkbox:checked').forEach(checkbox => {
         const id = checkbox.id.replace('item-tindakan-', '');
         const name = checkbox.dataset.name;
         const qtyInput = document.getElementById(`qty-tindakan-${id}`);
-        if (!qtyInput) {
-            // Try by finding the container and looking for qty input
-            const container = checkbox.closest('div[class*="flex items-center"]');
-            const qtyEl = container?.querySelector('input[type="number"]');
-            const qty = qtyEl ? parseInt(qtyEl.value) || 1 : 1;
-            selected.push({ name, qty });
-        } else {
-            const qty = parseInt(qtyInput.value) || 1;
-            selected.push({ name, qty });
-        }
+        const qty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
+        selected.push({ id, name, qty });
     });
-
-    // Store items data for form submission
-    window.tindakanSelectedItems = selected;
+    return selected;
 }
 
 // Mark permohonan as completed with timestamp
@@ -2804,17 +2800,18 @@ document.getElementById('form-tindakan').addEventListener('submit', async (e) =>
 
     const data = allData.find(d => String(d.__backendId) === String(id));
     if (data) {
-        // Create update object
         const updates = {
             status: status,
             catatan: catatan
         };
 
-        // Update items if edited (for Peralatan permohonan)
-        if (window.tindakanSelectedItems && window.tindakanSelectedItems.length > 0) {
-            updates.itemsData = JSON.stringify(window.tindakanSelectedItems);
-            const itemNames = window.tindakanSelectedItems.map(item => `${item.name} (${item.qty} unit)`).join(', ');
-            updates.items = itemNames;
+        // Update items Data ALWAYS (even if empty) to allow reduction to 0 items
+        if (data.jenisPermohonan === 'Peralatan') {
+            const selectedItems = collectTindakanItems();
+            updates.itemsData = JSON.stringify(selectedItems);
+            updates.items = selectedItems.length > 0
+                ? selectedItems.map(item => `${item.name} (${item.qty} unit)`).join(', ')
+                : 'Tiada item';
         }
 
         // If status is set to "Selesai", mark statusSelesai as true and record completion time
@@ -2826,7 +2823,7 @@ document.getElementById('form-tindakan').addEventListener('submit', async (e) =>
         // Use DataStore.update to ensure sync
         await DataStore.update(id, updates);
 
-        showToast('Status permohonan dikemaskini!');
+        showToast('✅ Berjaya dikemaskini!');
         closeModal('modal-tindakan');
 
         // Refresh UI
@@ -2917,35 +2914,61 @@ function renderLaporan() {
         }
 
         const itemUsage = {};
+        const now = new Date();
+
         permohonan.forEach(p => {
+            const isHandled = ['diluluskan', 'dalam proses'].includes((p.status || '').toLowerCase());
+            if (!isHandled) return;
+
+            const updateTime = p.updatedAt || p.createdAt;
+
             if (p.itemsData) {
                 try {
-                    const items = JSON.parse(p.itemsData);
-                    items.forEach(item => {
-                        // Hitung kekerapan permohonan (1 permohonan = 1, tidak kira unit)
-                        itemUsage[item.name] = (itemUsage[item.name] || 0) + 1;
-                    });
+                    const items = typeof p.itemsData === 'string' ? JSON.parse(p.itemsData) : p.itemsData;
+                    if (Array.isArray(items)) {
+                        items.forEach(item => {
+                            const qty = parseInt(item.qty) || 0;
+                            if (!itemUsage[item.name]) {
+                                itemUsage[item.name] = { qty: 0, latest: null };
+                            }
+                            itemUsage[item.name].qty += qty;
+                            if (!itemUsage[item.name].latest || new Date(updateTime) > new Date(itemUsage[item.name].latest)) {
+                                itemUsage[item.name].latest = updateTime;
+                            }
+                        });
+                    }
                 } catch (e) { }
             } else if (p.items && p.items !== 'Dewan') {
-                itemUsage[p.items] = (itemUsage[p.items] || 0) + 1;
+                if (!itemUsage[p.items]) {
+                    itemUsage[p.items] = { qty: 0, latest: null };
+                }
+                itemUsage[p.items].qty += 1;
+                if (!itemUsage[p.items].latest || new Date(updateTime) > new Date(itemUsage[p.items].latest)) {
+                    itemUsage[p.items].latest = updateTime;
+                }
             }
         });
 
-        const sortedUsage = Object.entries(itemUsage).sort((a, b) => b[1] - a[1]).slice(0, 5);
-        const maxUsage = sortedUsage.length > 0 ? sortedUsage[0][1] : 1;
+        // For Charts and Summaries
+        const sortedUsage = Object.entries(itemUsage)
+            .map(([name, data]) => [name, data.qty])
+            .sort((a, b) => b[1] - a[1]);
+
+        const top5Usage = sortedUsage.slice(0, 5);
+        const maxUsage = top5Usage.length > 0 ? top5Usage[0][1] : 1;
         const chartPeralatanDiv = document.getElementById('chart-peralatan');
 
         if (chartPeralatanDiv) {
-            if (sortedUsage.length === 0) {
+            if (top5Usage.length === 0) {
                 chartPeralatanDiv.innerHTML = '<p class="text-slate-400 text-center py-4 text-xs italic">Tiada penggunaan peralatan</p>';
             } else {
-                chartPeralatanDiv.innerHTML = sortedUsage.map(([name, count]) => {
+                chartPeralatanDiv.innerHTML = top5Usage.map(([name, count]) => {
                     const perc = Math.max(10, (count / maxUsage) * 100);
                     return `
                         <div class="mb-4">
                             <div class="flex justify-between items-center text-[11px] font-bold mb-1.5">
                                 <span class="text-slate-700">${name}</span>
-                                <span class="text-indigo-600">${count} Kali</span>
+                                <span class="text-indigo-600">${count} Unit Diguna</span>
                             </div>
                             <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                                 <div class="bg-indigo-600 h-full rounded-full transition-all duration-1000" style="width: ${perc}%"></div>
@@ -2983,7 +3006,7 @@ function renderLaporanPeralatanTable(usageData) {
     const kategori = getKategori();
 
     if (peralatan.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-12 text-center text-slate-400 italic">Tiada data inventori</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-slate-400 italic">Tiada data inventori</td></tr>';
         return;
     }
 
@@ -2996,23 +3019,55 @@ function renderLaporanPeralatanTable(usageData) {
         return true;
     });
 
+    // Update Headers for 7 columns
+    const thead = tbody.closest('table').querySelector('thead');
+    if (thead) {
+        thead.innerHTML = `
+            <tr class="bg-slate-50">
+                <th class="px-4 py-4 text-left text-[9px] font-black text-slate-500 uppercase tracking-widest">Peralatan</th>
+                <th class="px-4 py-4 text-center text-[9px] font-black text-slate-500 uppercase tracking-widest">Baru (+)</th>
+                <th class="px-4 py-4 text-center text-[9px] font-black text-slate-500 uppercase tracking-widest">Rosak (-)</th>
+                <th class="px-4 py-4 text-center text-[9px] font-black text-slate-500 uppercase tracking-widest">Jumlah</th>
+                <th class="px-4 py-4 text-center text-[9px] font-black text-slate-500 uppercase tracking-widest">Diguna</th>
+                <th class="px-4 py-4 text-center text-[9px] font-black text-slate-500 uppercase tracking-widest">Baki</th>
+                <th class="px-4 py-4 text-right text-[9px] font-black text-slate-500 uppercase tracking-widest">Status</th>
+            </tr>
+        `;
+    }
+
     tbody.innerHTML = unique.map(p => {
-        const kat = kategori.find(k => k.__backendId === p.kategoriId);
-        const usageCount = usageData[p.namaPeralatan] || 0;
-        const hasStock = parseInt(p.kuantitiTersedia) > 0;
+        const usageDataForItem = usageData[p.namaPeralatan] || { qty: 0, latest: null };
+        const usageCount = usageDataForItem.qty;
+        const total = parseInt(p.kuantiti) || 0;
+        const baki = Math.max(0, total - usageCount);
+        const hasStock = baki > 0;
+
+        const dateBaru = p.lastUpdateBaru ? `<br><span class="text-[8px] opacity-60">${formatRelativeDate(p.lastUpdateBaru)}</span>` : '';
+        const dateRosak = p.lastUpdateRosak ? `<br><span class="text-[8px] opacity-60">${formatRelativeDate(p.lastUpdateRosak)}</span>` : '';
+        const dateJumlah = p.lastUpdateJumlah ? `<br><span class="text-[8px] opacity-60">${formatRelativeDate(p.lastUpdateJumlah)}</span>` : '';
+        const dateLatestUse = usageDataForItem.latest ? `<br><span class="text-[8px] opacity-60">${formatRelativeDate(usageDataForItem.latest)}</span>` : '';
 
         return `
-            <tr class="hover:bg-slate-50 transition-colors">
-                <td class="px-6 py-4">
-                    <p class="font-bold text-slate-800">${p.namaPeralatan}</p>
+            <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
+                <td class="px-4 py-4">
+                    <p class="font-bold text-slate-800 text-xs">${p.namaPeralatan}</p>
                 </td>
-                <td class="px-6 py-4 text-slate-500 text-[10px] font-bold uppercase tracking-tighter">
-                    ${kat ? (kat.namaKategori || kat.nama) : '-'}
+                <td class="px-4 py-4 text-center">
+                    <span class="text-green-600 font-bold">${p.totalBaru || 0}</span>${dateBaru}
                 </td>
-                <td class="px-6 py-4 text-center">
-                    <span class="font-black text-indigo-700 text-lg">${usageCount}</span>
+                <td class="px-4 py-4 text-center">
+                    <span class="text-red-500 font-bold">${p.totalRosak || 0}</span>${dateRosak}
                 </td>
-                <td class="px-6 py-4 text-right">
+                <td class="px-4 py-4 text-center">
+                    <span class="text-slate-800 font-black">${total}</span>${dateJumlah}
+                </td>
+                <td class="px-4 py-4 text-center">
+                    <span class="text-indigo-600 font-bold">${usageCount}</span>${dateLatestUse}
+                </td>
+                <td class="px-4 py-4 text-center">
+                    <span class="font-bold border-b-2 ${hasStock ? 'border-green-400 text-green-700' : 'border-red-400 text-red-700'}">${baki}</span>
+                </td>
+                <td class="px-4 py-4 text-right">
                     <span class="status-badge ${hasStock ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}">
                         ${hasStock ? 'Sedia' : 'Habis'}
                     </span>
@@ -3020,6 +3075,13 @@ function renderLaporanPeralatanTable(usageData) {
             </tr>
         `;
     }).join('');
+}
+
+// Helper to format date relative to now or simple string
+function formatRelativeDate(isoDate) {
+    if (!isoDate) return '-';
+    const date = new Date(isoDate);
+    return date.toLocaleDateString('ms-MY', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
 function renderLaporanDewanTable(permohonanData) {
@@ -3385,19 +3447,47 @@ function saveBgSettings() {
 
     if (currentBgBase64) {
         localStorage.setItem('portalBgImage', currentBgBase64);
+        savePortalSetting('portalBgImage', currentBgBase64);
     }
 
     localStorage.setItem('portalBgSize', size);
     localStorage.setItem('portalBgPosition', pos);
+    savePortalSetting('portalBgSize', size);
+    savePortalSetting('portalBgPosition', pos);
 
     applyBgSettings();
-    showToast('✅ Tetapan latar belakang berjaya disimpan!');
+    showToast('✅ Tetapan latar belakang berjaya disimpan (Online Sync)');
+}
+
+async function savePortalSetting(key, val) {
+    const id = `setting_${key}`;
+    const setting = {
+        type: 'tetapan',
+        __backendId: id,
+        key: key,
+        value: val,
+        updatedAt: new Date().toISOString()
+    };
+
+    // Check if exists in allData
+    const existing = allData.find(d => d.__backendId === id);
+    if (existing) {
+        await DataStore.update(id, { value: val, updatedAt: new Date().toISOString() });
+    } else {
+        await DataStore.add(setting);
+    }
 }
 
 function applyBgSettings() {
-    const savedBg = localStorage.getItem('portalBgImage');
-    const savedSize = localStorage.getItem('portalBgSize') || 'cover';
-    const savedPos = localStorage.getItem('portalBgPosition') || 'center';
+    // Try to get from DataStore first for most recent online data, fallback to localStorage
+    const bgFromData = allData.find(d => d.key === 'portalBgImage')?.value;
+    const savedBg = bgFromData || localStorage.getItem('portalBgImage');
+
+    const sizeFromData = allData.find(d => d.key === 'portalBgSize')?.value;
+    const savedSize = sizeFromData || localStorage.getItem('portalBgSize') || 'cover';
+
+    const posFromData = allData.find(d => d.key === 'portalBgPosition')?.value;
+    const savedPos = posFromData || localStorage.getItem('portalBgPosition') || 'center';
 
     let bgEl = document.getElementById('global-portal-bg');
     if (!bgEl) {
@@ -3463,17 +3553,22 @@ function saveLogoSettings() {
     const fit = document.getElementById('logo-fit').value;
     if (currentLogoBase64) {
         localStorage.setItem('portalLogo', currentLogoBase64);
+        savePortalSetting('portalLogo', currentLogoBase64);
     }
     localStorage.setItem('portalLogoFit', fit);
+    savePortalSetting('portalLogoFit', fit);
     applyLogoSettings();
-    showToast('✅ Tetapan logo berjaya disimpan!');
+    showToast('✅ Tetapan logo berjaya disimpan (Online Sync)!');
 }
 
 //arealoginscript
 
 function applyLogoSettings() {
-    const savedLogo = localStorage.getItem('portalLogo');
-    const savedFit = localStorage.getItem('portalLogoFit') || 'contain';
+    const logoFromData = allData.find(d => d.key === 'portalLogo')?.value;
+    const savedLogo = logoFromData || localStorage.getItem('portalLogo');
+
+    const fitFromData = allData.find(d => d.key === 'portalLogoFit')?.value;
+    const savedFit = fitFromData || localStorage.getItem('portalLogoFit') || 'contain';
 
     const loginTarget = document.getElementById('login-logo-container');
     const sidebarTarget = document.getElementById('sidebar-logo-container');
@@ -4445,39 +4540,127 @@ function startRealtimeSync() {
     }, SYNC_INTERVAL);
 }
 
-// Simple Notification Sound (Beep)
+// Notification Sound System
 function playNotificationSound() {
+    const soundFromData = allData.find(d => d.key === 'portalSoundChoice')?.value;
+    const choice = soundFromData || localStorage.getItem('portalSoundChoice') || 'beep';
+
+    const volFromData = allData.find(d => d.key === 'portalSoundVolume')?.value;
+    const volume = (volFromData || localStorage.getItem('portalSoundVolume') || 50) / 100;
+
+    const customUrl = allData.find(d => d.key === 'portalCustomSoundUrl')?.value || localStorage.getItem('portalCustomSoundUrl');
+
     try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(500, audioCtx.currentTime);
-        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-
-        oscillator.start();
-        setTimeout(() => oscillator.stop(), 200); // 200ms beep
-
-        // Second beep
-        setTimeout(() => {
-            const osc2 = audioCtx.createOscillator();
-            const gain2 = audioCtx.createGain();
-            osc2.connect(gain2);
-            gain2.connect(audioCtx.destination);
-            osc2.frequency.setValueAtTime(800, audioCtx.currentTime);
-            gain2.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            osc2.start();
-            setTimeout(() => osc2.stop(), 200);
-        }, 250);
-
+        if (choice === 'custom' && customUrl) {
+            const audio = new Audio(customUrl);
+            audio.volume = volume;
+            audio.play().catch(e => console.error('Custom sound audio play failed', e));
+        } else if (choice === 'bell') {
+            playFreqSound([880, 1046.5], volume, 300);
+        } else if (choice === 'modern') {
+            playFreqSound([440, 554.37, 659.25], volume, 150, 50);
+        } else {
+            // Default Beep
+            playFreqSound([500, 800], volume, 200, 50);
+        }
     } catch (e) {
-        console.error('Audio play failed', e);
+        console.error('Core audio play failed', e);
     }
 }
+
+function playFreqSound(freqs, volume, duration, gap = 50) {
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        freqs.forEach((freq, idx) => {
+            setTimeout(() => {
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(volume * 0.2, audioCtx.currentTime); // Normalise volume
+                oscillator.start();
+                setTimeout(() => oscillator.stop(), duration);
+            }, idx * (duration + gap));
+        });
+    } catch (e) {
+        console.warn('Frequency sound failed', e);
+    }
+}
+
+function testNotificationSound() {
+    // Temporarily read from UI
+    const choice = document.getElementById('sound-choice').value;
+    const volume = document.getElementById('sound-volume').value / 100;
+    const customUrl = document.getElementById('custom-sound-url').value;
+
+    if (choice === 'custom' && customUrl) {
+        const audio = new Audio(customUrl);
+        audio.volume = volume;
+        audio.play().catch(e => {
+            showToast('❌ Gagal memutar URL audio khas', 'error');
+            console.error(e);
+        });
+    } else if (choice === 'bell') {
+        playFreqSound([880, 1046.5], volume, 300);
+    } else if (choice === 'modern') {
+        playFreqSound([440, 554.37, 659.25], volume, 150, 50);
+    } else {
+        playFreqSound([500, 800], volume, 200, 50);
+    }
+}
+
+async function saveSoundSettings() {
+    const choice = document.getElementById('sound-choice').value;
+    const volume = document.getElementById('sound-volume').value;
+    const customUrl = document.getElementById('custom-sound-url').value;
+
+    localStorage.setItem('portalSoundChoice', choice);
+    localStorage.setItem('portalSoundVolume', volume);
+    localStorage.setItem('portalCustomSoundUrl', customUrl);
+
+    await savePortalSetting('portalSoundChoice', choice);
+    await savePortalSetting('portalSoundVolume', volume);
+    await savePortalSetting('portalCustomSoundUrl', customUrl);
+
+    showToast('✅ Tetapan bunyi disimpan (Online Sync)!');
+}
+
+// Logic to show/hide custom sound URL
+document.addEventListener('DOMContentLoaded', () => {
+    const soundChoice = document.getElementById('sound-choice');
+    if (soundChoice) {
+        soundChoice.addEventListener('change', function () {
+            const container = document.getElementById('custom-sound-container');
+            if (this.value === 'custom') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        });
+    }
+
+    // Load current values safely
+    setTimeout(() => {
+        const savedChoice = allData.find(d => d.key === 'portalSoundChoice')?.value || localStorage.getItem('portalSoundChoice');
+        if (savedChoice && document.getElementById('sound-choice')) {
+            document.getElementById('sound-choice').value = savedChoice;
+            if (savedChoice === 'custom') document.getElementById('custom-sound-container').classList.remove('hidden');
+        }
+
+        const savedVol = allData.find(d => d.key === 'portalSoundVolume')?.value || localStorage.getItem('portalSoundVolume');
+        if (savedVol && document.getElementById('sound-volume')) {
+            document.getElementById('sound-volume').value = savedVol;
+            document.getElementById('volume-val').textContent = savedVol;
+        }
+
+        const savedUrl = allData.find(d => d.key === 'portalCustomSoundUrl')?.value || localStorage.getItem('portalCustomSoundUrl');
+        if (savedUrl && document.getElementById('custom-sound-url')) {
+            document.getElementById('custom-sound-url').value = savedUrl;
+        }
+    }, 1000);
+});
 
 // ===== REFERENCE NUMBER LOGIC =====
 function generateReferenceNo() {
@@ -4639,30 +4822,79 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.disabled = true;
             btn.textContent = 'Menyimpan...';
 
+            const addedBaru = parseInt(document.getElementById('tambah-baru').value) || 0;
+            const addedRosak = parseInt(document.getElementById('item-rosak').value) || 0;
+
+            // Get existing data if editing
+            let existing = null;
+            if (editId) {
+                existing = allData.find(d => String(d.__backendId) === String(editId));
+            }
+
+            const now = new Date().toISOString();
+
+            // Calculate new totals
+            let currentTotal = existing ? (parseInt(existing.kuantiti) || 0) : 0;
+            let totalBaru = existing ? (parseInt(existing.totalBaru) || 0) : 0;
+            let totalRosak = existing ? (parseInt(existing.totalRosak) || 0) : 0;
+
+            let lastUpdateBaru = existing ? existing.lastUpdateBaru : null;
+            let lastUpdateRosak = existing ? existing.lastUpdateRosak : null;
+            let lastUpdateJumlah = existing ? existing.lastUpdateJumlah : null;
+
+            if (addedBaru > 0) {
+                currentTotal += addedBaru;
+                totalBaru += addedBaru;
+                lastUpdateBaru = now;
+                lastUpdateJumlah = now;
+            }
+
+            if (addedRosak > 0) {
+                // Ensure we don't subtract more than available, but typically equipment total includes broken ones until removed?
+                // User said "tolak dari jumlah yang ada".
+                currentTotal = Math.max(0, currentTotal - addedRosak);
+                totalRosak += addedRosak;
+                lastUpdateRosak = now;
+                lastUpdateJumlah = now;
+            }
+
             const data = {
                 type: 'peralatan',
                 kategori: document.getElementById('kategori-peralatan').value,
                 namaPeralatan: document.getElementById('nama-peralatan').value,
-                kuantiti: parseInt(document.getElementById('kuantiti-peralatan').value) || 0,
-                kuantitiTersedia: parseInt(document.getElementById('kuantiti-peralatan').value) || 0,
-                createdAt: new Date().toISOString()
+                kuantiti: currentTotal,
+                kuantitiTersedia: currentTotal, // Will be recalculated by sync logic anyway
+                totalBaru: totalBaru,
+                totalRosak: totalRosak,
+                lastUpdateBaru: lastUpdateBaru,
+                lastUpdateRosak: lastUpdateRosak,
+                lastUpdateJumlah: lastUpdateJumlah,
+                createdAt: existing ? existing.createdAt : now
             };
 
             let result;
             if (editId) {
                 result = await DataStore.update(editId, data);
             } else {
+                // For new items, initial quantity is set as "Baru"
+                data.totalBaru = data.kuantiti;
+                data.lastUpdateBaru = now;
+                data.lastUpdateJumlah = now;
                 result = await DataStore.add(data);
             }
 
             if (result.isOk) {
-                showToast(editId ? 'Peralatan berjaya dikemaskini!' : 'Peralatan berjaya ditambah!');
+                showToast(editId ? 'Peralatan dikemaskini!' : 'Peralatan berjaya ditambah!');
                 closeModal('modal-peralatan');
                 formPeralatan.reset();
                 document.getElementById('peralatan-id').value = '';
+
+                // Refresh UIs
+                renderPeralatan();
+                if (typeof renderLaporan === 'function') renderLaporan();
             }
             btn.disabled = false;
-            btn.textContent = 'Simpan';
+            btn.textContent = editId ? 'Kemaskini' : 'Simpan';
         });
     }
 });

@@ -893,6 +893,7 @@
                         </div>
                     </div>
 
+                    <!-- Logo Setting Footer Hint -->
                     <div class="space-y-3">
                         <p class="text-sm font-bold text-slate-700 uppercase tracking-wider">Pratonton Logo</p>
                         <div id="logo-preview"
@@ -906,90 +907,149 @@
                             </p>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Google Sheets Sync Setting -->
-                    <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
-                        <div class="flex items-center gap-4 mb-6">
-                            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-slate-800">Google Sheets Database</h3>
-                                <p class="text-sm text-slate-500">Sambungkan data ke Google Sheets sebagai backup</p>
-                            </div>
+                <!-- Sound Settings -->
+                <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                            </svg>
                         </div>
-
-                        <div class="space-y-6">
-                            <!-- Connection Status -->
-                            <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-3">
-                                        <div id="sheets-status-indicator" class="w-3 h-3 rounded-full bg-slate-400">
-                                        </div>
-                                        <span id="sheets-status-text" class="text-sm font-medium text-slate-600">Belum
-                                            dikonfigurasi</span>
-                                    </div>
-                                    <button onclick="testGoogleSheetsConnection()"
-                                        class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
-                                        Test Sambungan
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Sync Actions -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <button onclick="syncDataToSheets()"
-                                    class="flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-bold transition-all shadow-md active:scale-95">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                    </svg>
-                                    Export ke Google Sheets
-                                </button>
-                                <button onclick="loadDataFromSheets()"
-                                    class="flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold transition-all shadow-md active:scale-95">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-                                    </svg>
-                                    Import dari Google Sheets
-                                </button>
-                            </div>
-
-                            <!-- Info Box -->
-                            <div class="bg-green-50 p-4 rounded-xl border border-green-200">
-                                <p class="text-xs text-green-800 leading-relaxed">
-                                    📊 <strong>Cara Setup:</strong> Buka fail <code
-                                        class="bg-green-100 px-1 rounded">GOOGLE_SHEETS_SETUP.md</code>
-                                    untuk panduan lengkap menyambungkan ke Google Sheets. Anda perlu deploy Google Apps
-                                    Script dan masukkan URL ke dalam
-                                    <code class="bg-green-100 px-1 rounded">script.js</code>.
-                                </p>
-                            </div>
-
-                            <!-- Auto Sync Toggle -->
-                            <div
-                                class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
-                                <div>
-                                    <p class="font-medium text-slate-800">Auto-Sync ke Google Sheets</p>
-                                    <p class="text-xs text-slate-500">Data akan auto-sync setiap kali ada perubahan</p>
-                                </div>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="auto-sync-toggle" class="sr-only peer" checked
-                                        onchange="toggleAutoSync()">
-                                    <div
-                                        class="w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600">
-                                    </div>
-                                </label>
-                            </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800">Bunyi Notifikasi (Notification Sound)</h3>
+                            <p class="text-sm text-slate-500">Urus pilihan bunyi dan kelantangan untuk hebahan admin</p>
                         </div>
                     </div>
 
-                </div> <!-- Tetapan Page END -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Pilihan Bunyi</label>
+                            <div class="flex gap-2">
+                                <select id="sound-choice"
+                                    class="flex-1 px-3 py-2 border-2 border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500">
+                                    <option value="beep" selected>Beep (Sedia Ada)</option>
+                                    <option value="bell">Bell (Lonceng)</option>
+                                    <option value="modern">Modern Chime</option>
+                                    <option value="custom">URL Bunyi Khas (MP3)</option>
+                                </select>
+                                <button onclick="testNotificationSound()"
+                                    class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg font-bold hover:bg-slate-200 transition-all flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                    </svg> Test
+                                </button>
+                            </div>
+                            <div id="custom-sound-container" class="mt-3 hidden">
+                                <input type="text" id="custom-sound-url" placeholder="https://example.com/sound.mp3"
+                                    class="w-full px-3 py-2 border-2 border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500">
+                                <p class="text-[10px] text-slate-500 mt-1">Gunakan URL MP3/WAV luaran (Direct Link)</p>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Kelantangan (Volume):
+                                <span id="volume-val">50</span>%</label>
+                            <input type="range" id="sound-volume" min="0" max="100" value="50"
+                                oninput="document.getElementById('volume-val').textContent = this.value"
+                                class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-600">
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end">
+                        <button onclick="saveSoundSettings()"
+                            class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-md active:scale-95 flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg> Simpan Tetapan Bunyi
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Google Sheets Sync Setting -->
+                <div class="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800">Google Sheets Database</h3>
+                            <p class="text-sm text-slate-500">Sambungkan data ke Google Sheets sebagai backup</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- Connection Status -->
+                        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div id="sheets-status-indicator" class="w-3 h-3 rounded-full bg-slate-400">
+                                    </div>
+                                    <span id="sheets-status-text" class="text-sm font-medium text-slate-600">Belum
+                                        dikonfigurasi</span>
+                                </div>
+                                <button onclick="testGoogleSheetsConnection()"
+                                    class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                                    Test Sambungan
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Sync Actions -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <button onclick="syncDataToSheets()"
+                                class="flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-bold transition-all shadow-md active:scale-95">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                                Export ke Google Sheets
+                            </button>
+                            <button onclick="loadDataFromSheets()"
+                                class="flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold transition-all shadow-md active:scale-95">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                                </svg>
+                                Import dari Google Sheets
+                            </button>
+                        </div>
+
+                        <!-- Info Box -->
+                        <div class="bg-green-50 p-4 rounded-xl border border-green-200">
+                            <p class="text-xs text-green-800 leading-relaxed">
+                                📊 <strong>Cara Setup:</strong> Buka fail <code
+                                    class="bg-green-100 px-1 rounded">GOOGLE_SHEETS_SETUP.md</code>
+                                untuk panduan lengkap menyambungkan ke Google Sheets. Anda perlu deploy Google Apps
+                                Script dan masukkan URL ke dalam
+                                <code class="bg-green-100 px-1 rounded">script.js</code>.
+                            </p>
+                        </div>
+
+                        <!-- Auto Sync Toggle -->
+                        <div
+                            class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
+                            <div>
+                                <p class="font-medium text-slate-800">Auto-Sync ke Google Sheets</p>
+                                <p class="text-xs text-slate-500">Data akan auto-sync setiap kali ada perubahan</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="auto-sync-toggle" class="sr-only peer" checked
+                                    onchange="toggleAutoSync()">
+                                <div
+                                    class="w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600">
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+            </div> <!-- Tetapan Page END -->
         </main> <!-- admin-content -->
     </div> <!-- app -->
     <!-- Modal Permohonan -->
@@ -1619,10 +1679,25 @@
                             class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                             placeholder="Masukkan nama peralatan">
                     </div>
-                    <div><label for="kuantiti-peralatan" class="block text-sm font-medium text-slate-700 mb-2">Kuantiti
-                            Unit</label> <input type="number" id="kuantiti-peralatan" required min="1"
-                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                            placeholder="Masukkan jumlah unit">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div><label class="block text-sm font-medium text-slate-700 mb-2">Jumlah Keseluruhan
+                                (Unit)</label>
+                            <input type="number" id="kuantiti-peralatan" disabled
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-500 font-bold"
+                                placeholder="0">
+                        </div>
+                        <div><label for="tambah-baru" class="block text-sm font-medium text-green-700 mb-2">Item Baru
+                                (+)</label>
+                            <input type="number" id="tambah-baru" min="0" value="0"
+                                class="w-full px-4 py-3 border border-green-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-green-50/30 font-bold"
+                                placeholder="Tambah baru">
+                        </div>
+                        <div><label for="item-rosak" class="block text-sm font-medium text-red-700 mb-2">Item Rosak
+                                (-)</label>
+                            <input type="number" id="item-rosak" min="0" value="0"
+                                class="w-full px-4 py-3 border border-red-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-red-50/30 font-bold"
+                                placeholder="Tolak rosak">
+                        </div>
                     </div>
                     <div class="flex gap-3 pt-4"><button type="button" onclick="closeModal('modal-peralatan')"
                             class="flex-1 px-6 py-3 border border-slate-200 rounded-xl text-slate-600 font-medium hover:bg-slate-50 transition-colors">Batal</button>
