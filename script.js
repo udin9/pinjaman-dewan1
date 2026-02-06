@@ -3988,10 +3988,13 @@ function openReportPreviewModal() {
                         <table style="margin: 0;">
                             <thead>
                                 <tr>
-                                    <th style="border: 1px solid #e5e7eb;">Peralatan</th>
-                                    <th style="border: 1px solid #e5e7eb;">Kategori</th>
-                                    <th style="text-align: center; border: 1px solid #e5e7eb;">Kekerapan Permohonan</th>
-                                    <th style="text-align: right; border: 1px solid #e5e7eb;">Status Inventori</th>
+                                    <th style="border: 1px solid #e5e7eb; font-size: 8pt;">Peralatan</th>
+                                    <th style="text-align: center; border: 1px solid #e5e7eb; font-size: 8pt;">Baru (+)</th>
+                                    <th style="text-align: center; border: 1px solid #e5e7eb; font-size: 8pt;">Rosak (-)</th>
+                                    <th style="text-align: center; border: 1px solid #e5e7eb; font-size: 8pt;">Jumlah</th>
+                                    <th style="text-align: center; border: 1px solid #e5e7eb; font-size: 8pt;">Diguna</th>
+                                    <th style="text-align: center; border: 1px solid #e5e7eb; font-size: 8pt;">Baki</th>
+                                    <th style="text-align: right; border: 1px solid #e5e7eb; font-size: 8pt;">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
