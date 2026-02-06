@@ -34,7 +34,7 @@ if (document.readyState === 'loading') {
 
 // ===== GOOGLE SHEETS DATABASE INTEGRATION =====
 // PENTING: Gantikan URL ini dengan URL deployment Apps Script anda
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwfs87D-SdyF0r39GmIH237Sm6-CFr-u-WemwmM1TewwiE_RMyMLmHXNfBVsKW4BuykRA/exec'; // <- TUKAR INI!
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwrRj6FHq7Qfo72p0LEaIz3V6fOieI5gJqHojNKjaKWaieMBn_hXbCmJEt12FYyiRfxBg/exec'; // <- TUKAR INI!
 
 // Google Sheets Database API
 const GoogleSheetsDB = {
@@ -343,9 +343,23 @@ function setupAuthListener() {
     }
 
     try {
-        auth.onAuthStateChanged((user) => {
+        auth.onAuthStateChanged(async (user) => {
             if (user) {
                 console.log('✅ User logged in:', user.email);
+
+                // Check authorization
+                const admins = allData.filter(d => d.type === 'admin');
+                const adminExists = admins.some(a => a.email.toLowerCase() === user.email.toLowerCase());
+
+                // Fallback for Master Admin or if it's the first time
+                const isMaster = user.email.toLowerCase() === 'admin@gmail.com' || user.email.toLowerCase() === ADMIN_USERNAME.toLowerCase() + '@gmail.com';
+
+                if (!adminExists && !isMaster && admins.length > 0) {
+                    console.warn('⛔ Unauthorized login attempt:', user.email);
+                    showLoginError('Akses ditolak. Email anda tidak berdaftar sebagai pentadbir.');
+                    auth.signOut();
+                    return;
+                }
 
                 // Set Session State
                 sessionStorage.setItem('loggedIn', 'true');
@@ -376,7 +390,11 @@ function setupAuthListener() {
 
                 const pageLogin = document.getElementById('login-page');
                 const pageApp = document.getElementById('app');
-                if (pageLogin) pageLogin.classList.add('hidden');
+
+                if (pageLogin) {
+                    pageLogin.classList.add('hidden');
+                    pageLogin.style.display = 'none';
+                }
                 if (pageApp) {
                     pageApp.classList.remove('hidden');
                     pageApp.style.display = 'flex';
@@ -389,8 +407,28 @@ function setupAuthListener() {
                 showPage(lastPage);
             } else {
                 console.log('ℹ️ No user logged in');
+
+                // CRITICAL: Only clear if not logged in locally
+                const isLocalLogin = localStorage.getItem('loginType') === 'local';
+                if (isLocalLogin) {
+                    console.log('✅ Local session active, ignoring Firebase null user');
+                    return;
+                }
+
                 sessionStorage.removeItem('loggedIn');
                 localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('loginType');
+
+                const pageLogin = document.getElementById('login-page');
+                const pageApp = document.getElementById('app');
+                if (pageApp) {
+                    pageApp.classList.add('hidden');
+                    pageApp.style.display = 'none';
+                }
+                if (pageLogin) {
+                    pageLogin.classList.remove('hidden');
+                    pageLogin.style.display = 'flex';
+                }
             }
         });
     } catch (error) {
@@ -442,6 +480,7 @@ window.handleGoogleSignIn = async function () {
         const result = await auth.signInWithPopup(provider);
 
         console.log('✅ Google Sign-In Success:', result.user.email);
+        localStorage.setItem('loginType', 'firebase');
         // Auth state change listener akan handle UI update automatically
 
     } catch (error) {
@@ -753,6 +792,9 @@ const DataStore = {
             { name: 'Kategori Dropdown', fn: updateKategoriDropdown },
             { name: 'User Item Dropdown', fn: updateUserItemDropdown },
             { name: 'Laporan', fn: renderLaporan },
+            { name: 'Admin', fn: renderAdmin },
+            { name: 'Background Settings', fn: applyBgSettings },
+            { name: 'Logo Settings', fn: applyLogoSettings },
             { name: 'Notifications', fn: updateNotifications }
         ];
 
@@ -991,6 +1033,9 @@ function updateSheetsStatusIndicator() {
 async function autoLoadFromGoogleSheets() {
     if (!GoogleSheetsDB.isConfigured()) {
         console.log('ℹ️ Google Sheets not configured, using localStorage');
+        // Still apply settings even without Google Sheets
+        applyBgSettings();
+        applyLogoSettings();
         return;
     }
 
@@ -1019,10 +1064,15 @@ async function autoLoadFromGoogleSheets() {
 
         } else {
             console.log('ℹ️ No data in Google Sheets or fetch failed, using localStorage');
+            // Still apply settings even if no data
+            applyBgSettings();
+            applyLogoSettings();
         }
     } catch (error) {
         console.warn('⚠️ Auto-load from Google Sheets failed:', error.message);
-        // Silently fail - just use localStorage
+        // Silently fail - just use localStorage and apply settings
+        applyBgSettings();
+        applyLogoSettings();
     }
 }
 
@@ -1032,14 +1082,11 @@ window.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const isUserMode = urlParams.get('user') === 'true' || window.location.hash.includes('user=true');
 
-        // 1. Apply UI Visuals immediately
-        applyBgSettings();
-        applyLogoSettings();
-
-        // 2. Update Google Sheets status indicator
+        // 1. Update Google Sheets status indicator
         updateSheetsStatusIndicator();
 
-        // 3. Auto-load data from Google Sheets (if configured)
+        // 2. Auto-load data from Google Sheets (if configured)
+        // This will call refreshUI() which includes applyBgSettings() and applyLogoSettings()
         autoLoadFromGoogleSheets().then(() => {
             // Start looping for live updates only if NOT in user mode (Admin side needs to know)
             if (!isUserMode) {
@@ -1081,13 +1128,22 @@ window.addEventListener('DOMContentLoaded', () => {
             const storedLogin = localStorage.getItem('isLoggedIn');
             if (storedLogin === 'true') {
                 isLoggedIn = true;
-                document.getElementById('login-page').classList.add('hidden');
-                document.getElementById('app').classList.remove('hidden');
+                const pageLogin = document.getElementById('login-page');
+                const pageApp = document.getElementById('app');
+
+                if (pageLogin) {
+                    pageLogin.classList.add('hidden');
+                    pageLogin.style.display = 'none';
+                }
+                if (pageApp) {
+                    pageApp.classList.remove('hidden');
+                    pageApp.style.display = 'flex';
+                }
 
                 // Priority: URL Hash > LocalStorage > Default
                 const hashPage = window.location.hash.replace('#', '');
                 const storedPage = localStorage.getItem('lastPage');
-                const validPages = ['dashboard', 'permohonan', 'peralatan', 'tetapan', 'laporan'];
+                const validPages = ['dashboard', 'permohonan', 'peralatan', 'tetapan', 'laporan', 'admin'];
 
                 let pageToLoad = 'dashboard';
                 if (validPages.includes(hashPage)) {
@@ -1098,14 +1154,21 @@ window.addEventListener('DOMContentLoaded', () => {
 
                 showPage(pageToLoad);
 
-                // Trigger data update only after showing page
+                // Trigger data update
                 DataStore.notify();
             } else {
                 // Not Logged In - Show Login Page
-                document.getElementById('login-page').classList.remove('hidden');
-                document.getElementById('app').classList.add('hidden');
+                const pageLogin = document.getElementById('login-page');
+                const pageApp = document.getElementById('app');
+                if (pageApp) {
+                    pageApp.classList.add('hidden');
+                    pageApp.style.display = 'none';
+                }
+                if (pageLogin) {
+                    pageLogin.classList.remove('hidden');
+                    pageLogin.style.display = 'flex';
+                }
 
-                // Clear hash if not logged in to avoid confusion
                 if (window.location.hash) {
                     history.replaceState(null, null, ' ');
                 }
@@ -1145,6 +1208,7 @@ window.handleLogin = async function () {
             const res = await window.auth.signInWithEmailAndPassword(username, password);
             console.log('✅ Firebase login success:', res.user.email);
             localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('loginType', 'firebase'); // Set type
             restoreSubmit();
             return;
         } catch (err) {
@@ -1160,6 +1224,7 @@ window.handleLogin = async function () {
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
         isLoggedIn = true;
         localStorage.setItem('isLoggedIn', 'true'); // Save state
+        localStorage.setItem('loginType', 'local'); // Set type
         restoreSubmit();
 
         console.log('✅ Login Successful');
@@ -1168,8 +1233,14 @@ window.handleLogin = async function () {
         const pageLogin = document.getElementById('login-page');
         const pageApp = document.getElementById('app');
 
-        if (pageLogin) pageLogin.classList.add('hidden');
-        if (pageApp) pageApp.classList.remove('hidden');
+        if (pageLogin) {
+            pageLogin.classList.add('hidden');
+            pageLogin.style.display = 'none';
+        }
+        if (pageApp) {
+            pageApp.classList.remove('hidden');
+            pageApp.style.display = 'flex';
+        }
 
         DataStore.notify(); // Ensure data is rendered
 
@@ -1213,15 +1284,22 @@ function logout() {
     // Clear UI first
     isLoggedIn = false;
     localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('lastPage');
+    localStorage.removeItem('loginType');
+    localStorage.setItem('lastPage', 'dashboard');
     localStorage.removeItem('userEmail');
     localStorage.removeItem('userName');
 
     const appEl = document.getElementById('app');
     const loginEl = document.getElementById('login-page');
 
-    if (appEl) appEl.classList.add('hidden');
-    if (loginEl) loginEl.classList.remove('hidden');
+    if (appEl) {
+        appEl.classList.add('hidden');
+        appEl.style.display = 'none';
+    }
+    if (loginEl) {
+        loginEl.classList.remove('hidden');
+        loginEl.style.display = 'flex';
+    }
 
     // Clear form
     const usernameInput = document.getElementById('username');
@@ -1234,12 +1312,15 @@ function logout() {
         window.auth.signOut()
             .then(() => {
                 console.log('✅ Firebase signed out');
+                window.location.reload(); // Force reload to clear all states
             })
             .catch((error) => {
                 console.error('⚠️ Firebase logout error (non-critical):', error.message);
+                window.location.reload();
             });
     } else {
         console.log('ℹ️ Firebase not initialized, skipping Firebase sign-out');
+        window.location.reload();
     }
 }
 
@@ -1276,6 +1357,8 @@ function showPage(page) {
     // Render permohonan table when showing page
     if (page === 'permohonan') {
         renderPermohonan();
+    } else if (page === 'admin') {
+        renderAdmin();
     }
 
     // Save state if logged in
@@ -1485,7 +1568,28 @@ function renderPermohonan() {
         return;
     }
 
-    const permohonan = getPermohonan();
+    let permohonan = getPermohonan();
+
+    // Apply date filter if set
+    const startDate = document.getElementById('filter-permohonan-mula')?.value;
+    const endDate = document.getElementById('filter-permohonan-akhir')?.value;
+
+    if (startDate || endDate) {
+        permohonan = permohonan.filter(p => {
+            const pinjamDate = new Date(p.tarikhMulaPinjam);
+            const start = startDate ? new Date(startDate) : null;
+            const end = endDate ? new Date(endDate) : null;
+
+            if (start && end) {
+                return pinjamDate >= start && pinjamDate <= end;
+            } else if (start) {
+                return pinjamDate >= start;
+            } else if (end) {
+                return pinjamDate <= end;
+            }
+            return true;
+        });
+    }
 
     if (permohonan.length === 0) {
         tbody.innerHTML = '<tr><td colspan="10" class="px-6 py-12 text-center text-slate-400">Tiada permohonan</td></tr>';
@@ -1540,11 +1644,157 @@ function renderPermohonan() {
             `}).join('');
 }
 
+// Apply permohonan date filter
+function applyPermohonanFilter() {
+    renderPermohonan();
+}
+
+// Reset permohonan date filter
+function resetPermohonanFilter() {
+    document.getElementById('filter-permohonan-mula').value = '';
+    document.getElementById('filter-permohonan-akhir').value = '';
+    document.getElementById('filter-permohonan-akhir').removeAttribute('min');
+    renderPermohonan();
+}
+
+// Update date constraints for permohonan filter
+function updatePermohonanDateConstraints() {
+    const startDateInput = document.getElementById('filter-permohonan-mula');
+    const endDateInput = document.getElementById('filter-permohonan-akhir');
+
+    if (startDateInput.value) {
+        // Set minimum date for end date to be the start date
+        endDateInput.min = startDateInput.value;
+
+        // If end date is already set and is before start date, clear it
+        if (endDateInput.value && endDateInput.value < startDateInput.value) {
+            endDateInput.value = '';
+        }
+    } else {
+        // Remove minimum constraint if start date is cleared
+        endDateInput.removeAttribute('min');
+    }
+}
+
+// Update date constraints for admin form (Tambah Permohonan)
+function updateAdminDateConstraints() {
+    const startInput = document.getElementById('tarikh-mula');
+    const endInput = document.getElementById('tarikh-pulang');
+
+    if (startInput && endInput && startInput.value) {
+        endInput.min = startInput.value;
+
+        if (endInput.value && endInput.value < startInput.value) {
+            endInput.value = '';
+            showToast('⚠️ Tarikh tamat mesti selepas tarikh mula', 'warning');
+        }
+    } else if (endInput) {
+        endInput.removeAttribute('min');
+    }
+}
+
+// Update date constraints for user form (Borang Permohonan Peminjaman)
+function updateUserDateConstraints() {
+    const startInput = document.getElementById('user-tarikh-mula');
+    const endInput = document.getElementById('user-tarikh-pulang');
+
+    if (startInput && endInput && startInput.value) {
+        endInput.min = startInput.value;
+
+        if (endInput.value && endInput.value < startInput.value) {
+            endInput.value = '';
+            showToast('⚠️ Tarikh tamat mesti selepas tarikh mula', 'warning');
+        }
+    } else if (endInput) {
+        endInput.removeAttribute('min');
+    }
+}
+
+
+
 function formatDate(dateStr) {
     if (!dateStr) return '-';
     const date = new Date(dateStr);
     return date.toLocaleString('ms-MY', { dateStyle: 'short', timeStyle: 'short' });
 }
+
+// Render Admin
+function renderAdmin() {
+    const container = document.getElementById('admin-table-body');
+    if (!container) return;
+
+    const admins = allData.filter(d => d.type === 'admin');
+
+    if (admins.length === 0) {
+        container.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-slate-400">Tiada admin berdaftar</td></tr>`;
+        return;
+    }
+
+    container.innerHTML = admins.map(admin => `
+        <tr class="hover:bg-slate-50 transition-colors">
+            <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-sm">
+                        ${admin.nama ? admin.nama.charAt(0).toUpperCase() : 'A'}
+                    </div>
+                    <span class="font-medium text-slate-800 text-sm">${admin.nama || '-'}</span>
+                </div>
+            </td>
+            <td class="px-6 py-4 text-slate-600 text-sm">${admin.email || '-'}</td>
+            <td class="px-6 py-4 text-slate-600 text-sm">
+                <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${admin.role === 'Super Admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">
+                    ${admin.role || 'Staff'}
+                </span>
+            </td>
+            <td class="px-6 py-4 text-center">
+                <button onclick="openDeleteModal('${admin.__backendId}', 'admin')" class="text-red-400 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50" title="Padam Admin">
+                    <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Add Admin Handler
+function setupAdminHandler() {
+    const form = document.getElementById('form-add-admin');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nama = document.getElementById('admin-nama').value;
+        const email = document.getElementById('admin-email').value;
+        const role = document.getElementById('admin-role').value;
+
+        const newAdmin = {
+            type: 'admin',
+            nama,
+            email,
+            role,
+            addedAt: new Date().toISOString()
+        };
+
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Menyimpan...';
+
+        try {
+            await DataStore.add(newAdmin);
+            showToast('✅ Admin baru berjaya ditambah!');
+            form.reset();
+            document.getElementById('admin-form-container').classList.add('hidden');
+        } catch (err) {
+            console.error('Failed to add admin:', err);
+            showToast('❌ Gagal menambah admin', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Simpan Admin';
+        }
+    });
+}
+document.addEventListener('DOMContentLoaded', setupAdminHandler);
 
 // Render kategori
 function renderKategori() {
@@ -3003,6 +3253,7 @@ function renderLaporan() {
 
         renderLaporanPeralatanTable(itemUsage);
         renderLaporanDewanTable(permohonan);
+        renderLogStok();
 
     } catch (err) {
         console.error('❌ renderLaporan failed:', err);
@@ -3082,6 +3333,65 @@ function renderLaporanPeralatanTable(usageData) {
                     <span class="status-badge ${hasStock ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}">
                         ${hasStock ? 'Sedia' : 'Habis'}
                     </span>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Toggle Report Section Visibility
+window.toggleReportSection = function (sectionId) {
+    const section = document.getElementById(sectionId);
+    if (section) {
+        if (section.classList.contains('hidden')) {
+            section.classList.remove('hidden');
+        } else {
+            section.classList.add('hidden');
+        }
+    }
+};
+
+// Render Log Transaksi Stok
+function renderLogStok() {
+    const tbody = document.getElementById('laporan-log-table');
+    if (!tbody) return;
+
+    // Get log data
+    const logs = allData.filter(d => d.type === 'log_stok').sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    if (logs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-4 text-center text-slate-400">Tiada rekod transaksi buat masa ini.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = logs.map(log => {
+        const date = new Date(log.timestamp).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+        let typeClass = 'bg-slate-100 text-slate-700';
+        let typeIcon = '';
+
+        if (log.jenisPerubahan && log.jenisPerubahan.toLowerCase().includes('rosak')) {
+            typeClass = 'bg-red-100 text-red-700';
+            typeIcon = '-';
+        } else if (log.jenisPerubahan && log.jenisPerubahan.toLowerCase().includes('tambah') || log.jenisPerubahan.toLowerCase().includes('baru')) {
+            typeClass = 'bg-green-100 text-green-700';
+            typeIcon = '+';
+        }
+
+        return `
+            <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
+                <td class="px-4 py-3 text-xs text-slate-600 font-medium whitespace-nowrap">${date}</td>
+                <td class="px-4 py-3 text-xs text-slate-800 font-bold">${log.namaPeralatan || '-'}</td>
+                <td class="px-4 py-3 text-center">
+                    <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${typeClass}">
+                        ${log.jenisPerubahan || 'Kemaskini'}
+                    </span>
+                </td>
+                <td class="px-4 py-3 text-center text-xs font-bold font-mono">
+                    ${typeIcon}${log.kuantiti || 0}
+                </td>
+                <td class="px-4 py-3 text-xs text-slate-500 italic">
+                    ${log.catatan || '-'}
                 </td>
             </tr>
         `;
@@ -3398,10 +3708,237 @@ function downloadExcel() {
 }
 
 function downloadPDF() {
-    // Using window.print() as a robust "Save as PDF" solution for vanilla JS
-    // This allows the user to use the system's "Save as PDF" feature
     toggleDownloadMenu();
-    window.print();
+
+    // Get date filter values
+    const startDate = document.getElementById('filter-permohonan-mula')?.value;
+    const endDate = document.getElementById('filter-permohonan-akhir')?.value;
+    const dateRangeText = (startDate || endDate)
+        ? `${startDate || '-'} hingga ${endDate || '-'}`
+        : 'Semua Tarikh';
+
+    // Get logo
+    const logoContainer = document.getElementById('sidebar-logo-container');
+    let logoHTML = '';
+    if (logoContainer) {
+        const logoImg = logoContainer.querySelector('img');
+        if (logoImg) {
+            logoHTML = `<img src="${logoImg.src}" style="width: 80px; height: 80px; object-fit: contain;" />`;
+        }
+    }
+
+    // Get filtered permohonan data
+    let permohonan = getPermohonan();
+
+    if (startDate || endDate) {
+        permohonan = permohonan.filter(p => {
+            const pinjamDate = new Date(p.tarikhMulaPinjam);
+            const start = startDate ? new Date(startDate) : null;
+            const end = endDate ? new Date(endDate) : null;
+
+            if (start && end) {
+                return pinjamDate >= start && pinjamDate <= end;
+            } else if (start) {
+                return pinjamDate >= start;
+            } else if (end) {
+                return pinjamDate <= end;
+            }
+            return true;
+        });
+    }
+
+    // Build table rows
+    const tableRows = permohonan.map(p => {
+        let itemsDisplay = '-';
+        if (p.itemsData) {
+            try {
+                const items = JSON.parse(p.itemsData);
+                itemsDisplay = items.map((item, idx) => `${idx + 1}. ${item.name} (${item.qty})`).join(', ');
+            } catch (e) {
+                itemsDisplay = p.items || '-';
+            }
+        } else if (p.items && p.items !== 'Dewan') {
+            itemsDisplay = p.items;
+        }
+
+        return `
+            <tr>
+                <td style="border: 1px solid #e5e7eb; padding: 8px; font-size: 8pt;">${p.noPermohonan || '-'}</td>
+                <td style="border: 1px solid #e5e7eb; padding: 8px; font-size: 8pt;">${p.nama || '-'}</td>
+                <td style="border: 1px solid #e5e7eb; padding: 8px; font-size: 8pt;">${p.email || '-'}</td>
+                <td style="border: 1px solid #e5e7eb; padding: 8px; font-size: 8pt;">${p.nomorTelefon || '-'}</td>
+                <td style="border: 1px solid #e5e7eb; padding: 8px; font-size: 8pt;">${p.cawangan || '-'}</td>
+                <td style="border: 1px solid #e5e7eb; padding: 8px; font-size: 8pt;">${p.jenisPermohonan || '-'}</td>
+                <td style="border: 1px solid #e5e7eb; padding: 8px; font-size: 8pt;">${itemsDisplay}</td>
+                <td style="border: 1px solid #e5e7eb; padding: 8px; font-size: 8pt;">${formatDate(p.tarikhMulaPinjam)}</td>
+                <td style="border: 1px solid #e5e7eb; padding: 8px; font-size: 8pt;">${formatDate(p.tarikhPulang)}</td>
+                <td style="border: 1px solid #e5e7eb; padding: 8px; font-size: 8pt;">${p.status || 'Dalam Proses'}</td>
+            </tr>
+        `;
+    }).join('');
+
+    // Create print window
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+        showToast('❌ Sila benarkan popup untuk mencetak');
+        return;
+    }
+
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Senarai Permohonan - Dewan Sri Kinabatangan</title>
+            <style>
+                @page {
+                    size: A4 portrait;
+                    margin: 15mm;
+                }
+                
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+                
+                body {
+                    font-family: 'Arial', sans-serif;
+                    color: #1e293b;
+                    background: white;
+                }
+                
+                .header {
+                    text-align: center;
+                    margin-bottom: 20px;
+                    padding-bottom: 15px;
+                    border-bottom: 3px solid #667eea;
+                }
+                
+                .header-content {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 20px;
+                    margin-bottom: 10px;
+                }
+                
+                .logo {
+                    flex-shrink: 0;
+                }
+                
+                .title-section {
+                    text-align: left;
+                }
+                
+                h1 {
+                    font-size: 18pt;
+                    font-weight: bold;
+                    color: #1e293b;
+                    margin-bottom: 5px;
+                }
+                
+                .subtitle {
+                    font-size: 12pt;
+                    color: #64748b;
+                    font-weight: 600;
+                }
+                
+                .date-range {
+                    font-size: 10pt;
+                    color: #475569;
+                    margin-top: 10px;
+                    font-weight: bold;
+                }
+                
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 15px;
+                }
+                
+                th {
+                    background: #f1f5f9;
+                    border: 1px solid #e5e7eb;
+                    padding: 10px 8px;
+                    text-align: left;
+                    font-size: 8pt;
+                    font-weight: bold;
+                    color: #475569;
+                    text-transform: uppercase;
+                }
+                
+                td {
+                    border: 1px solid #e5e7eb;
+                    padding: 8px;
+                    font-size: 8pt;
+                    vertical-align: top;
+                }
+                
+                tr:nth-child(even) {
+                    background: #f9fafb;
+                }
+                
+                .footer {
+                    margin-top: 20px;
+                    padding-top: 10px;
+                    border-top: 2px solid #e5e7eb;
+                    text-align: center;
+                    font-size: 8pt;
+                    color: #64748b;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div class="header-content">
+                    ${logoHTML ? `<div class="logo">${logoHTML}</div>` : ''}
+                    <div class="title-section">
+                        <h1>Senarai Permohonan</h1>
+                        <div class="subtitle">Dewan Sri Kinabatangan</div>
+                    </div>
+                </div>
+                <div class="date-range">Tempoh: ${dateRangeText}</div>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>No. Rujukan</th>
+                        <th>Pemohon</th>
+                        <th>Email</th>
+                        <th>No. Telefon</th>
+                        <th>Cawangan</th>
+                        <th>Jenis</th>
+                        <th>Item</th>
+                        <th>Tarikh Mula</th>
+                        <th>Tarikh Pulang</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
+            </table>
+            
+            <div class="footer">
+                Dijana pada: ${new Date().toLocaleString('ms-MY', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric'
+    })}
+            </div>
+        </body>
+        </html>
+    `);
+
+    printWindow.document.close();
+
+    setTimeout(() => {
+        printWindow.print();
+    }, 500);
 }
 
 function printReport() {
@@ -3426,8 +3963,19 @@ function handleBgUpload(input) {
         reader.onload = function (e) {
             currentBgBase64 = e.target.result;
             preview.innerHTML = `<img src="${currentBgBase64}" class="w-full h-full object-cover">`;
+            const bgUrlInput = document.getElementById('bg-url');
+            if (bgUrlInput) bgUrlInput.value = ''; // Clear URL if upload used
         };
         reader.readAsDataURL(file);
+    }
+}
+
+function handleBgUrl(url) {
+    if (!url) return;
+    currentBgBase64 = url;
+    const preview = document.getElementById('bg-preview');
+    if (preview) {
+        preview.innerHTML = `<img src="${url}" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<span class=\"text-xs text-red-500\">URL tidak sah</span>'">`;
     }
 }
 
@@ -3560,6 +4108,15 @@ function updateLogoPreview() {
     if (img) img.style.objectFit = fit;
 }
 
+function handleLogoUrl(url) {
+    if (!url) return;
+    currentLogoBase64 = url;
+    const preview = document.getElementById('logo-preview');
+    if (preview) {
+        preview.innerHTML = `<img src="${url}" class="w-full h-full object-contain" onerror="this.parentElement.innerHTML='<span class=\"text-xs text-red-500\">URL tidak sah</span>'">`;
+    }
+}
+
 function saveLogoSettings() {
     const fit = document.getElementById('logo-fit').value;
     if (currentLogoBase64) {
@@ -3610,77 +4167,8 @@ function applyLogoSettings() {
 //login page script
 
 // ===== LOGIN HANDLING =====
-async function handleLogin() {
-    const userInp = document.getElementById('username');
-    const passInp = document.getElementById('password');
-    const errDiv = document.getElementById('login-error');
-    const btn = document.getElementById('btn-login');
-
-    if (!userInp || !passInp) return;
-
-    const username = userInp.value.trim();
-    const password = passInp.value.trim();
-
-    if (!username || !password) {
-        if (errDiv) errDiv.classList.remove('hidden');
-        return;
-    }
-
-    btn.disabled = true;
-    const originalText = btn.textContent;
-    btn.textContent = 'Menyemak...';
-
-    try {
-        // Fetch users from local data or localstorage
-        const users = [
-            { id: 'admin', password: 'password123', name: 'Super Admin', role: 'admin' },
-            { id: 'staff', password: 'password123', name: 'Staff', role: 'user' }
-        ];
-
-        // Also check localStorage for dynamically added users
-        const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
-        const allUsers = [...users, ...localUsers];
-
-        const foundUser = allUsers.find(u => u.id === username && u.password === password);
-
-        if (foundUser) {
-            console.log('✅ Login successful:', foundUser.name);
-            sessionStorage.setItem('loggedIn', 'true');
-            localStorage.setItem('isLoggedIn', 'true');
-            localStorage.setItem('userName', foundUser.name);
-            localStorage.setItem('userEmail', foundUser.id);
-            localStorage.setItem('userRole', foundUser.role);
-
-            // Hide login, show app (SPA logic)
-            const pageLogin = document.getElementById('login-page');
-            const pageApp = document.getElementById('app');
-            if (pageLogin) pageLogin.classList.add('hidden');
-            if (pageApp) {
-                pageApp.classList.remove('hidden');
-                pageApp.style.display = 'flex';
-            }
-
-            updateUserUI(foundUser.name, foundUser.id);
-            showPage('dashboard');
-
-            if (typeof startIdleTimer === 'function') startIdleTimer();
-        } else {
-            if (errDiv) {
-                const errMsg = document.getElementById('login-error-msg');
-                if (errMsg) errMsg.textContent = 'Username atau password salah';
-                errDiv.classList.remove('hidden');
-            }
-        }
-    } catch (e) {
-        console.error('Login error:', e);
-    } finally {
-        btn.disabled = false;
-        btn.textContent = originalText;
-    }
-}
-
-// Global window assignment
-window.handleLogin = handleLogin;
+// handleLogin is now defined as a global function earlier in the script.
+// Deleting this duplicate.
 
 // Redirect if not logged in (for SPA logic)
 function checkAuth() {
@@ -3952,6 +4440,7 @@ function executeAdvancedPrint(editMode = false) {
     const showSummary = document.getElementById('print-summary').checked;
     const showPeralatan = document.getElementById('print-peralatan').checked;
     const showDewan = document.getElementById('print-dewan').checked;
+    const showLog = document.getElementById('print-log').checked;
 
     const startDate = document.getElementById('filter-tarikh-mula').value;
     const endDate = document.getElementById('filter-tarikh-akhir').value;
@@ -3985,6 +4474,9 @@ function executeAdvancedPrint(editMode = false) {
     if (summarySection) summarySection.classList.toggle('print-hide', !showSummary);
     if (peralatanSection) peralatanSection.classList.toggle('print-hide', !showPeralatan);
     if (dewanSection) dewanSection.classList.toggle('print-hide', !showDewan);
+
+    const logSection = document.getElementById('report-section-log');
+    if (logSection) logSection.classList.toggle('print-hide', !showLog);
 
     closeModal('modal-pilih-laporan');
 
@@ -4029,6 +4521,7 @@ function openReportPreviewModal() {
     const showSummary = document.getElementById('print-summary').checked;
     const showPeralatan = document.getElementById('print-peralatan').checked;
     const showDewan = document.getElementById('print-dewan').checked;
+    const showLog = document.getElementById('print-log').checked;
 
     // 3. Get logo if available
     const logoContainer = document.getElementById('sidebar-logo-container');
@@ -4119,6 +4612,31 @@ function openReportPreviewModal() {
                     <div style="border: 2px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
                         <table style="margin: 0;">
                             ${document.getElementById('laporan-dewan-table').innerHTML}
+                        </table>
+                    </div>
+                </div>
+                ` : ''}
+
+                ${showLog ? `
+                <div class="report-section" style="border-left: 6px solid #f97316; page-break-inside: avoid;">
+                    <h3 style="color: #f97316;">
+                        Log Transaksi Stok
+                    </h3>
+                    <p style="font-size: 10pt; color: #64748b; margin-bottom: 15px;">Sejarah penambahan dan kerosakan peralatan:</p>
+                    <div style="border: 2px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                        <table style="margin: 0; width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background-color: #f8fafc;">
+                                    <th style="border: 1px solid #e5e7eb; font-size: 8pt; text-align: left; padding: 8px; font-weight: bold; color: #64748b; text-transform: uppercase;">Tarikh</th>
+                                    <th style="border: 1px solid #e5e7eb; font-size: 8pt; text-align: left; padding: 8px; font-weight: bold; color: #64748b; text-transform: uppercase;">Peralatan</th>
+                                    <th style="border: 1px solid #e5e7eb; font-size: 8pt; text-align: center; padding: 8px; font-weight: bold; color: #64748b; text-transform: uppercase;">Jenis</th>
+                                    <th style="border: 1px solid #e5e7eb; font-size: 8pt; text-align: center; padding: 8px; font-weight: bold; color: #64748b; text-transform: uppercase;">Kuantiti</th>
+                                    <th style="border: 1px solid #e5e7eb; font-size: 8pt; text-align: left; padding: 8px; font-weight: bold; color: #64748b; text-transform: uppercase;">Catatan</th>
+                                </tr>
+                            </thead>
+                            <tbody style="font-size: 9pt;">
+                                ${document.getElementById('laporan-log-table').innerHTML}
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -4650,13 +5168,16 @@ function startRealtimeSync() {
 
 // Notification Sound System
 function playNotificationSound() {
-    const soundFromData = allData.find(d => d.key === 'portalSoundChoice')?.value;
+    // Refresh allData from store to be sure
+    const freshData = DataStore.get();
+
+    const soundFromData = freshData.find(d => d.key === 'portalSoundChoice')?.value;
     const choice = soundFromData || localStorage.getItem('portalSoundChoice') || 'beep';
 
-    const volFromData = allData.find(d => d.key === 'portalSoundVolume')?.value;
+    const volFromData = freshData.find(d => d.key === 'portalSoundVolume')?.value;
     const volume = (volFromData || localStorage.getItem('portalSoundVolume') || 50) / 100;
 
-    const customUrl = allData.find(d => d.key === 'portalCustomSoundUrl')?.value || localStorage.getItem('portalCustomSoundUrl');
+    const customUrl = freshData.find(d => d.key === 'portalCustomSoundUrl')?.value || localStorage.getItem('portalCustomSoundUrl');
 
     try {
         if (choice === 'custom' && customUrl) {
@@ -4955,6 +5476,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 totalBaru += addedBaru;
                 lastUpdateBaru = now;
                 lastUpdateJumlah = now;
+
+                // Log Tambah (Only if editing existing item)
+                if (editId) {
+                    DataStore.add({
+                        type: 'log_stok',
+                        peralatanId: editId,
+                        namaPeralatan: document.getElementById('nama-peralatan').value,
+                        jenisPerubahan: 'Tambah Stok',
+                        kuantiti: addedBaru,
+                        catatan: 'Penambahan stok manual',
+                        timestamp: now
+                    });
+                }
             }
 
             if (addedRosak > 0) {
@@ -4962,8 +5496,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 // User said "tolak dari jumlah yang ada".
                 currentTotal = Math.max(0, currentTotal - addedRosak);
                 totalRosak += addedRosak;
+                totalRosak += addedRosak; // Wait, duplicate line here? removing it.
                 lastUpdateRosak = now;
                 lastUpdateJumlah = now;
+
+                // Log Rosak (Only if editing existing item)
+                if (editId) {
+                    DataStore.add({
+                        type: 'log_stok',
+                        peralatanId: editId,
+                        namaPeralatan: document.getElementById('nama-peralatan').value,
+                        jenisPerubahan: 'Lapor Rosak',
+                        kuantiti: addedRosak,
+                        catatan: 'Dilaporkan rosak',
+                        timestamp: now
+                    });
+                }
             }
 
             const data = {
@@ -4989,6 +5537,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 data.lastUpdateBaru = now;
                 data.lastUpdateJumlah = now;
                 result = await DataStore.add(data);
+
+                // Log Creation for New Item
+                await DataStore.add({
+                    type: 'log_stok',
+                    peralatanId: data.__backendId,
+                    namaPeralatan: data.namaPeralatan,
+                    jenisPerubahan: 'Item Baru',
+                    kuantiti: data.kuantiti,
+                    catatan: 'Pendaftaran item baru',
+                    timestamp: now
+                });
             }
 
             if (result.isOk) {
@@ -5045,12 +5604,5 @@ document.addEventListener('DOMContentLoaded', () => {
 // Call on load
 document.addEventListener('DOMContentLoaded', attachUserFormHandler);
 
-// Helper to save portal settings to Sheets
-async function savePortalSetting(key, value) {
-    if (!GoogleSheetsDB.isConfigured()) return;
-    try {
-        await GoogleSheetsDB.add('settings', { key, value, updatedAt: new Date().toISOString() });
-    } catch (e) {
-        console.warn('Failed to sync setting to sheets:', e);
-    }
-}
+// Helper to save portal settings to Sheets - Consolidated with previous definition
+// Removing duplicate.

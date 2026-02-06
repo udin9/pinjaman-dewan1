@@ -17,7 +17,9 @@ const SHEET_NAMES = {
     permohonan: 'Permohonan',
     kategori: 'Kategori',
     peralatan: 'Peralatan',
-    tetapan: 'Tetapan'
+    tetapan: 'Tetapan',
+    admin: 'Admin',
+    log_stok: 'LogStok'
 };
 
 // ===== MAIN HANDLERS =====
@@ -126,6 +128,20 @@ function getAllData() {
     if (peralatanSheet) {
         const peralatanData = getSheetData(ss, peralatanSheet.getName());
         peralatanData.forEach(row => { row.type = 'peralatan'; allData.push(row); });
+    }
+
+    // Get Admin
+    const adminSheet = getSheetRobust(ss, SHEET_NAMES.admin);
+    if (adminSheet) {
+        const adminData = getSheetData(ss, adminSheet.getName());
+        adminData.forEach(row => { row.type = 'admin'; allData.push(row); });
+    }
+
+    // Get Log Stok
+    const logStokSheet = getSheetRobust(ss, SHEET_NAMES.log_stok);
+    if (logStokSheet) {
+        const logStokData = getSheetData(ss, logStokSheet.getName());
+        logStokData.forEach(row => { row.type = 'log_stok'; allData.push(row); });
     }
 
     return { success: true, data: allData };
@@ -322,7 +338,9 @@ function syncAllData(allData) {
         permohonan: allData.filter(d => d.type === 'permohonan'),
         kategori: allData.filter(d => d.type === 'kategori'),
         peralatan: allData.filter(d => d.type === 'peralatan'),
-        tetapan: allData.filter(d => d.type === 'tetapan')
+        tetapan: allData.filter(d => d.type === 'tetapan'),
+        admin: allData.filter(d => d.type === 'admin'),
+        log_stok: allData.filter(d => d.type === 'log_stok')
     };
 
     // Sync each sheet
@@ -360,7 +378,9 @@ function syncAllData(allData) {
         success: true, message: 'All data synced successfully', counts: {
             permohonan: grouped.permohonan.length,
             kategori: grouped.kategori.length,
-            peralatan: grouped.peralatan.length
+            peralatan: grouped.peralatan.length,
+            admin: grouped.admin.length,
+            log_stok: grouped.log_stok.length
         }
     };
 }
@@ -401,11 +421,19 @@ function initializeSheets() {
     // Tetapan headers
     const tetapanHeaders = ['__backendId', 'key', 'value', 'updatedAt'];
 
+    // Admin headers
+    const adminHeaders = ['__backendId', 'nama', 'email', 'role', 'addedAt'];
+
+    // Log Stok Headers
+    const logStokHeaders = ['__backendId', 'peralatanId', 'namaPeralatan', 'jenisPerubahan', 'kuantiti', 'catatan', 'timestamp'];
+
     const sheetsConfig = [
         { name: SHEET_NAMES.permohonan, headers: permohonanHeaders },
         { name: SHEET_NAMES.kategori, headers: kategoriHeaders },
         { name: SHEET_NAMES.peralatan, headers: peralatanHeaders },
-        { name: SHEET_NAMES.tetapan, headers: tetapanHeaders }
+        { name: SHEET_NAMES.tetapan, headers: tetapanHeaders },
+        { name: SHEET_NAMES.admin, headers: adminHeaders },
+        { name: SHEET_NAMES.log_stok, headers: logStokHeaders }
     ];
 
     sheetsConfig.forEach(cfg => {
